@@ -14,10 +14,14 @@ private:
     SecureBuffer<BlockSize> key2_;
     const Cipher<BlockSize> &ctx_;
 
-    void pad();
+    void inline pad() noexcept {
+        buf_[buffered_len_] = 0x80;    
+        for (size_t i = buffered_len_ + 1; i < BlockSize; ++i)
+            buf_[i] = 0;
+    }
 public:
     OMAC(const Cipher<BlockSize> &ctx);
-    void update(const std::vector<uint8_t> &data);
+    void update(const std::vector<uint8_t> &data) noexcept;
     std::vector<uint8_t> digest(const size_t size = BlockSize);
 #ifdef UNIT_TESTS
     const SecureBuffer<BlockSize> &getAccumulator() const;
@@ -27,26 +31,19 @@ public:
 };
 
 template <size_t BlockSize>
-static void transformAdditionalKey(SecureBuffer<BlockSize> &key) {
-    static const auto B = []() -> SecureBuffer<BlockSize>{
-        if constexpr (BlockSize == 8) {
-            return SecureBuffer<8>{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1b};
-        } else {
-            return SecureBuffer<16>{
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x87
-            };
-        }
-    }();
-    if (key[0] & 0b10000000) (key <<= 1) += B;
-    else (key <<= 1);
-}
-
-template <size_t BlockSize>
-void OMAC<BlockSize>::pad() {
-    buf_[buffered_len_] = 0x80;    
-    for (size_t i = buffered_len_ + 1; i < BlockSize; ++i)
-        buf_[i] = 0;
+static inline void transformAdditionalKey(SecureBuffer<BlockSize> &key) noexcept {
+    if constexpr (BlockSize == 8) {
+        static const SecureBuffer<8> B{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1b};
+        if (key[0] & 0b10000000) (key <<= 1) += B;
+        else (key <<= 1);
+    } else {
+        static const SecureBuffer<16> B{
+            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x87
+        };
+        if (key[0] & 0b10000000) (key <<= 1) += B;
+        else (key <<= 1);
+    }
 }
 
 template <size_t BlockSize>
@@ -61,7 +58,7 @@ OMAC<BlockSize>::OMAC(const Cipher<BlockSize> &ctx) : buffered_len_(0),  ctx_(ct
 }
 
 template <size_t BlockSize>
-void OMAC<BlockSize>::update(const std::vector<uint8_t> &data) {
+void OMAC<BlockSize>::update(const std::vector<uint8_t> &data) noexcept {
     if (data.empty()) return;
     size_t current_index = 0;
     do {
@@ -70,7 +67,11 @@ void OMAC<BlockSize>::update(const std::vector<uint8_t> &data) {
             buffered_len_ = 0;
         }
         size_t to_copy = std::min(BlockSize - buffered_len_, data.size() - current_index);
-        buf_.insert(data.begin() + current_index, data.begin() + current_index + to_copy, buffered_len_);
+        std::copy(
+            data.begin() + current_index,
+            data.begin() + current_index + to_copy,
+            buf_.begin() + buffered_len_
+        );
         buffered_len_ += to_copy;
         current_index += to_copy;
     } while (data.size() - current_index > 0);
@@ -79,7 +80,7 @@ void OMAC<BlockSize>::update(const std::vector<uint8_t> &data) {
 template <size_t BlockSize>
 std::vector<uint8_t> OMAC<BlockSize>::digest(const size_t size) {
     if (size > BlockSize)
-        throw std::out_of_range("Запрошен размер MAC больше длины блока выбранного шифра.");
+        throw std::invalid_argument("Запрошен размер MAC больше длины блока выбранного шифра.");
     const SecureBuffer<BlockSize> *final_key;
     if (buffered_len_ == BlockSize)
         final_key = &key1_;
@@ -88,8 +89,7 @@ std::vector<uint8_t> OMAC<BlockSize>::digest(const size_t size) {
         final_key = &key2_;
     }
     ctx_.encrypt((accumulator_ += buf_) += *final_key);
-    std::vector<uint8_t> result(accumulator_.begin(), accumulator_.begin() + size);
-    return result;
+    return std::vector<uint8_t>(accumulator_.begin(), accumulator_.begin() + size);
 }
 
 #ifdef UNIT_TESTS

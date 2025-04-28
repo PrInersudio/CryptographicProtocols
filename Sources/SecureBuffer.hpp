@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <stdexcept>
+#include <algorithm>
 
 template <size_t N>
 class SecureBuffer {
@@ -14,24 +15,28 @@ private:
 public:
     SecureBuffer();
     SecureBuffer(std::initializer_list<uint8_t> init);
-    SecureBuffer(const SecureBuffer &);
-    SecureBuffer& operator=(const SecureBuffer &);
-    ~SecureBuffer();
-    uint8_t &operator[](const size_t i);
-    const uint8_t &operator[](const size_t i) const;
-    bool operator==(const SecureBuffer &other) const;
-    uint8_t *raw();
-    const uint8_t *raw() const;
-    void zero();
-    SecureBuffer<N> &operator<<=(const size_t shift);
-    SecureBuffer<N> &operator+=(const SecureBuffer<N> &op);
+    SecureBuffer(const SecureBuffer &original) noexcept;
+    SecureBuffer& operator=(const SecureBuffer &) noexcept;
+    ~SecureBuffer() noexcept;
+    inline uint8_t &operator[](const size_t i) noexcept { return data_[i]; }
+    inline const uint8_t &operator[](const size_t i) const noexcept { return data_[i]; }
+    inline bool operator==(const SecureBuffer &other) const noexcept { return !memcmp(data_, other.data_, N); }
+    inline uint8_t *raw() noexcept { return data_; }
+    inline const uint8_t *raw() const noexcept { return data_; }
+    inline void zero() noexcept { explicit_bzero(data_, N); }
+    SecureBuffer<N> &operator<<=(const size_t shift) noexcept;
+    inline SecureBuffer<N> &operator+=(const SecureBuffer<N> &op) noexcept
+        {std::transform(data_, data_ + N, op.data_, data_, std::bit_xor<uint8_t>()); return *this;}
     template<typename InputIt>
-    void insert(InputIt first, InputIt last, size_t pos = 0);
+    void insert(InputIt first, InputIt last, size_t pos = 0) noexcept;
     template<typename Container>
-    void insert(const Container& container, size_t pos = 0);
-    class Iterator;
-    Iterator begin();
-    Iterator end();
+    inline void insert(const Container& container, size_t pos = 0) noexcept { insert(std::begin(container), std::end(container), pos); }
+    struct Iterator;
+    inline Iterator begin() noexcept { return Iterator(data_); }
+    inline Iterator end() noexcept { return Iterator(data_ + N); };
+    struct ConstIterator;
+    inline ConstIterator begin() const noexcept { return ConstIterator(data_); }
+    inline ConstIterator end() const noexcept { return ConstIterator(data_ + N); }
 };
 
 template <size_t N>
@@ -50,55 +55,25 @@ SecureBuffer<N>::SecureBuffer(std::initializer_list<uint8_t> init) : SecureBuffe
 }
 
 template <size_t N>
-SecureBuffer<N>::SecureBuffer(const SecureBuffer &original) : SecureBuffer() {
-    memcpy(data_, original.data_, N);
+SecureBuffer<N>::SecureBuffer(const SecureBuffer &original) noexcept : SecureBuffer() {
+    std::copy(original.data_, original.data_ + N, data_);
 }
 
 template <size_t N>
-SecureBuffer<N> &SecureBuffer<N>::operator=(const SecureBuffer &other) {
+SecureBuffer<N> &SecureBuffer<N>::operator=(const SecureBuffer &other) noexcept {
     if (this != &other)
-        memcpy(data_, other.data_, N);
+        std::copy(other.data_, other.data_ + N, data_);
     return *this;
 }
 
 template <size_t N>
-SecureBuffer<N>::~SecureBuffer() {
+SecureBuffer<N>::~SecureBuffer() noexcept {
     explicit_bzero(data_, N);
     munlock(data_, N);
 }
 
 template <size_t N>
-uint8_t &SecureBuffer<N>::operator[](const size_t i) {
-    return data_[i];
-}
-
-template <size_t N>
-const uint8_t &SecureBuffer<N>::operator[](const size_t i) const {
-    return data_[i];
-}
-
-template <size_t N>
-bool SecureBuffer<N>::operator==(const SecureBuffer &other) const {
-    return !memcmp(data_, other.data_, N);
-}
-
-template <size_t N>
-uint8_t *SecureBuffer<N>::raw() {
-    return data_;
-}
-
-template <size_t N>
-const uint8_t *SecureBuffer<N>::raw() const {
-    return data_;
-}
-
-template <size_t N>
-void SecureBuffer<N>::zero() {
-    explicit_bzero(data_, N);
-}
-
-template <size_t N>
-SecureBuffer<N> &SecureBuffer<N>::operator<<=(const size_t shift) {
+SecureBuffer<N> &SecureBuffer<N>::operator<<=(const size_t shift) noexcept {
     if (shift == 0) return *this;
     const size_t total_bits = N * 8;
     if (shift >= total_bits) {
@@ -110,37 +85,24 @@ SecureBuffer<N> &SecureBuffer<N>::operator<<=(const size_t shift) {
     if (byte_shift > 0) {
         for (size_t i = 0; i < N - byte_shift; ++i)
             (*this)[i] = (*this)[i + byte_shift];
-        for (size_t i = N - byte_shift; i < N; ++i)
-            (*this)[i] = 0;
+        std::fill(data_ + N - byte_shift, data_ + N, 0);
     }
     if (bit_shift > 0) {
-        const size_t end = N - byte_shift - 1;
-        for (size_t i = 0; i < end; ++i)
+        for (size_t i = 0; i < N - 1; ++i) {
             (*this)[i] = ((*this)[i] << bit_shift) | ((*this)[i + 1] >> (8 - bit_shift));
-        (*this)[end] <<= bit_shift;
+        }
+        (*this)[N - 1] <<= bit_shift;
     }
-    return *this;
-}
-
-template <size_t N>
-SecureBuffer<N> &SecureBuffer<N>::operator+=(const SecureBuffer<N> &op) {
-    for (uint8_t i = 0; i < N; ++i) (*this)[i] ^= op[i];
     return *this;
 }
 
 template<size_t N>
 template<typename InputIt>
-void SecureBuffer<N>::insert(InputIt first, InputIt last, size_t pos) {
+void SecureBuffer<N>::insert(InputIt first, InputIt last, size_t pos) noexcept{
     for (; pos <  N && first != last; ++pos) {
         data_[pos] = *first;
         ++first;
     }
-}
-
-template<size_t N>
-template<typename Container>
-void SecureBuffer<N>::insert(const Container& container, size_t pos) {
-    insert(std::begin(container), std::end(container), pos);
 }
 
 template<size_t N>
@@ -152,31 +114,47 @@ struct SecureBuffer<N>::Iterator {
     using reference         = uint8_t &;
 
     Iterator(const pointer ptr) : ptr_(ptr) {}
-    reference operator*() const { return *ptr_; }
-    pointer operator->() const { return ptr_; }
-    Iterator& operator++() { ++ptr_; return *this; }  
-    Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
-    Iterator& operator--() { --ptr_; return *this; }  
-    Iterator operator--(int) { Iterator tmp = *this; --(*this); return tmp; }
-    bool operator==(const Iterator& b) const { return ptr_ == b.ptr_; }
-    bool operator!=(const Iterator& b) const { return ptr_ != b.ptr_; }   
-    Iterator &operator+=(size_t n) { ptr_ += n; return *this; }
-    Iterator &operator-=(size_t n) { ptr_ -= n; return *this; }
-    Iterator operator+(size_t n) const { return Iterator(ptr_ + n); }
-    Iterator operator-(size_t n) const { return Iterator(ptr_ - n); }
-    size_t operator-(const Iterator &b) const {return ptr_ - b.ptr_; }
+    inline reference operator*() const noexcept { return *ptr_; }
+    inline pointer operator->() const noexcept { return ptr_; }
+    inline Iterator& operator++() noexcept { ++ptr_; return *this; }  
+    inline Iterator operator++(int) noexcept { Iterator tmp = *this; ++(*this); return tmp; }
+    inline Iterator& operator--() noexcept { --ptr_; return *this; }  
+    inline Iterator operator--(int) noexcept { Iterator tmp = *this; --(*this); return tmp; }
+    inline bool operator==(const Iterator& b) const noexcept { return ptr_ == b.ptr_; }
+    inline bool operator!=(const Iterator& b) const noexcept { return ptr_ != b.ptr_; }   
+    inline Iterator &operator+=(size_t n) noexcept { ptr_ += n; return *this; }
+    inline Iterator &operator-=(size_t n) noexcept { ptr_ -= n; return *this; }
+    inline Iterator operator+(size_t n) const noexcept { return Iterator(ptr_ + n); }
+    inline Iterator operator-(size_t n) const noexcept { return Iterator(ptr_ - n); }
+    inline size_t operator-(const Iterator &b) const noexcept {return ptr_ - b.ptr_; }
 private:
     pointer ptr_;
 };
 
 template<size_t N>
-SecureBuffer<N>::Iterator SecureBuffer<N>::begin() {
-    return Iterator(data_);
-}
+struct SecureBuffer<N>::ConstIterator {
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type   = std::ptrdiff_t;
+    using value_type        = uint8_t;
+    using pointer           = const uint8_t *;
+    using reference         = const uint8_t &;
 
-template<size_t N>
-SecureBuffer<N>::Iterator SecureBuffer<N>::end() {
-    return Iterator(data_ + N);
-}
+    ConstIterator(pointer ptr) : ptr_(ptr) {}
+    inline reference operator*() const noexcept { return *ptr_; }
+    inline pointer operator->() const noexcept { return ptr_; }
+    inline ConstIterator& operator++() noexcept { ++ptr_; return *this; }  
+    inline ConstIterator operator++(int) noexcept { ConstIterator tmp = *this; ++(*this); return tmp; }
+    inline ConstIterator& operator--() noexcept { --ptr_; return *this; }  
+    inline ConstIterator operator--(int) noexcept { ConstIterator tmp = *this; --(*this); return tmp; }
+    inline bool operator==(const ConstIterator& b) const noexcept { return ptr_ == b.ptr_; }
+    inline bool operator!=(const ConstIterator& b) const noexcept { return ptr_ != b.ptr_; }   
+    inline ConstIterator &operator+=(size_t n) noexcept { ptr_ += n; return *this; }
+    inline ConstIterator &operator-=(size_t n) noexcept { ptr_ -= n; return *this; }
+    inline ConstIterator operator+(size_t n) const noexcept { return ConstIterator(ptr_ + n); }
+    inline ConstIterator operator-(size_t n) const noexcept { return ConstIterator(ptr_ - n); }
+    inline size_t operator-(const ConstIterator &b) const noexcept {return ptr_ - b.ptr_; }
+private:
+    pointer ptr_;
+};
 
 #endif

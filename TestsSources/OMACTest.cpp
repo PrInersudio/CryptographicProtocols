@@ -185,7 +185,7 @@ TEST(OMACTest, TestZeroUpdate) {
 
 TEST(OMACTest, TestDigestThrow) {
     OMAC ctx(сipher);
-    EXPECT_THROW(ctx.digest(17), std::out_of_range);
+    EXPECT_THROW(ctx.digest(17), std::invalid_argument);
 }
 
 int main(int argc, char **argv) {
