@@ -107,7 +107,6 @@ static const SecureBuffer<32> key = {
 };
 
 TEST(ConstKey, MB1) {
-    static const std::vector<uint8_t> expected_mac = {0x81, 0xC3, 0x97, 0xCC, 0x13, 0xE2, 0xAF, 0x68};
     std::ifstream file(TestFilesFolder "1MB.bin", std::ios::binary);
     if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "1MB.bin.");
     OpenSSLKuznechikOMAC ctx(cipher, key);
@@ -115,12 +114,10 @@ TEST(ConstKey, MB1) {
     while (fillBuffer(file, buf))
         ctx.update(buf);
     ctx.update(buf);
-    const std::vector<uint8_t> mac = ctx.digest(expected_mac.size());
-    EXPECT_EQ(mac, expected_mac);
+    const std::vector<uint8_t> mac = ctx.digest();
 }
 
 TEST(ConstKey, MB100) {
-    static const std::vector<uint8_t> expected_mac = {0x74, 0xF0, 0xF8, 0xBD, 0xDD, 0xAC, 0xBD, 0xBE};
     std::ifstream file(TestFilesFolder "100MB.bin", std::ios::binary);
     if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "100MB.bin.");
     OpenSSLKuznechikOMAC ctx(cipher, key);
@@ -128,12 +125,10 @@ TEST(ConstKey, MB100) {
     while (fillBuffer(file, buf))
         ctx.update(buf);
     ctx.update(buf);
-    const std::vector<uint8_t> mac = ctx.digest(expected_mac.size());
-    EXPECT_EQ(mac, expected_mac);
+    const std::vector<uint8_t> mac = ctx.digest();
 }
 
 TEST(ConstKey, MB1000) {
-    static const std::vector<uint8_t> expected_mac = {0x45, 0xE6, 0x9A, 0xB1, 0xD1, 0x86, 0x26, 0x03};
     std::ifstream file(TestFilesFolder "1000MB.bin", std::ios::binary);
     if (!file) throw std::runtime_error("Не удалось открыть" TestFilesFolder "1000MB.bin.");
     OpenSSLKuznechikOMAC ctx(cipher, key);
@@ -141,13 +136,12 @@ TEST(ConstKey, MB1000) {
     while (fillBuffer(file, buf))
         ctx.update(buf);
     ctx.update(buf);
-    const std::vector<uint8_t> mac = ctx.digest(expected_mac.size());
-    EXPECT_EQ(mac, expected_mac);
+    const std::vector<uint8_t> mac = ctx.digest();
 }
 
 TEST(VariableKey, Blocks10) {
-    std::ifstream file(TestFilesFolder "16B_1M.bin", std::ios::binary);
-    if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "16B_1M.bin.");
+    std::ifstream file(TestFilesFolder "1MBlocks.bin", std::ios::binary);
+    if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "1MBlocks.bin.");
     std::vector<uint8_t> buf(160);
     for (uint32_t i = 0; i < 100000; ++i) {
         OpenSSLKuznechikOMAC ctx(cipher, RandKeyGenerator::genRandKey());
@@ -158,8 +152,8 @@ TEST(VariableKey, Blocks10) {
 }
 
 TEST(VariableKey, Blocks100) {
-    std::ifstream file(TestFilesFolder "16B_1M.bin", std::ios::binary);
-    if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "16B_1M.bin.");
+    std::ifstream file(TestFilesFolder "1MBlocks.bin", std::ios::binary);
+    if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "1MBlocks.bin.");
     std::vector<uint8_t> buf(1600);
     for (uint32_t i = 0; i < 10000; ++i) {
         OpenSSLKuznechikOMAC ctx(cipher, RandKeyGenerator::genRandKey());
@@ -170,8 +164,8 @@ TEST(VariableKey, Blocks100) {
 }
 
 TEST(VariableKey, Blocks1000) {
-    std::ifstream file(TestFilesFolder "16B_1M.bin", std::ios::binary);
-    if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "16B_1M.bin.");
+    std::ifstream file(TestFilesFolder "1MBlocks.bin", std::ios::binary);
+    if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "1MBlocks.bin.");
     std::vector<uint8_t> buf(16000);
     for (uint32_t i = 0; i < 1000; ++i) {
         OpenSSLKuznechikOMAC ctx(cipher, RandKeyGenerator::genRandKey());

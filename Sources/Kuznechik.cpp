@@ -1,14 +1,14 @@
 #include "Kuznechik.hpp"
-#include "GFElement.hpp"
 #include <iostream>
 #include <iomanip>
 
 static uint8_t linearTransform(const SecureBuffer<16> &vector) {
+    #include "MulTable.hpp"
     static constexpr uint8_t coefficients[] = {148, 32, 133, 16, 194, 192, 1, 251, 1, 192, 194, 16, 133, 32, 148, 1};
-    GFElement result(0);
+    uint8_t result = 0;
     for (uint8_t i = 0; i < 16; ++i)
-        result += coefficients[i] * GFElement(vector[i]);
-    return uint8_t(result);
+        result ^= mul_table[coefficients[i]][vector[i]];
+    return result;
 }
 
 static SecureBuffer<16> &substitute(SecureBuffer<16> &vector) {
