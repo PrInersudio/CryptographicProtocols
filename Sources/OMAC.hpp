@@ -32,18 +32,11 @@ public:
 
 template <size_t BlockSize>
 static inline void transformAdditionalKey(SecureBuffer<BlockSize> &key) noexcept {
-    if constexpr (BlockSize == 8) {
-        static const SecureBuffer<8> B{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1b};
-        if (key[0] & 0b10000000) (key <<= 1) += B;
-        else (key <<= 1);
-    } else {
-        static const SecureBuffer<16> B{
-            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x87
-        };
-        if (key[0] & 0b10000000) (key <<= 1) += B;
-        else (key <<= 1);
-    }
+    static constexpr uint8_t B = BlockSize == 8 ? 0x1b : 0x87;
+    if (key[0] & 0b10000000) {
+        key <<= 1;
+        key[BlockSize - 1] ^= B;
+    } else key <<= 1;
 }
 
 template <size_t BlockSize>

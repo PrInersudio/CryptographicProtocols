@@ -84,34 +84,6 @@ TEST(SecureBufferTest, AdditionOperator) {
     EXPECT_EQ(buffer1[1], uint8_t(0b01011010));
 }
 
-TEST(SecureBufferTest, InsertIterator) {
-    SecureBuffer<5> buffer;
-    std::vector<uint8_t> values = {1, 2, 3};
-    buffer.insert(values.begin(), values.end());
-    EXPECT_EQ(buffer[0], 1);
-    EXPECT_EQ(buffer[1], 2);
-    EXPECT_EQ(buffer[2], 3);
-    EXPECT_EQ(buffer[3], 0);
-    EXPECT_EQ(buffer[4], 0);
-}
-
-TEST(SecureBufferTest, InsertContainer) {
-    SecureBuffer<5> buffer;
-    uint8_t values[] = {4, 5, 6};
-    buffer.insert(values);
-    EXPECT_EQ(buffer[0], 4);
-    EXPECT_EQ(buffer[1], 5);
-    EXPECT_EQ(buffer[2], 6);
-}
-
-TEST(SecureBufferTest, InsertWithOffset) {
-    SecureBuffer<5> buffer;
-    std::vector<uint8_t> values = {7, 8};
-    buffer.insert(values, 2);
-    EXPECT_EQ(buffer[2], 7);
-    EXPECT_EQ(buffer[3], 8);
-}
-
 TEST(SecureBufferIteratorTest, BasicDereferenceAndIncrement) {
     SecureBuffer<5> buf = {1, 2, 3, 4, 5};
     auto it = buf.begin();

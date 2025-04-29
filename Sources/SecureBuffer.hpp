@@ -16,7 +16,8 @@ public:
     SecureBuffer();
     SecureBuffer(std::initializer_list<uint8_t> init);
     SecureBuffer(const SecureBuffer &original) noexcept;
-    SecureBuffer& operator=(const SecureBuffer &) noexcept;
+    inline SecureBuffer& operator=(const SecureBuffer &other) noexcept
+        { if (this != &other) std::copy(other.data_, other.data_ + N, data_); return *this; }
     ~SecureBuffer() noexcept;
     inline uint8_t &operator[](const size_t i) noexcept { return data_[i]; }
     inline const uint8_t &operator[](const size_t i) const noexcept { return data_[i]; }
@@ -27,10 +28,8 @@ public:
     SecureBuffer<N> &operator<<=(const size_t shift) noexcept;
     inline SecureBuffer<N> &operator+=(const SecureBuffer<N> &op) noexcept
         {std::transform(data_, data_ + N, op.data_, data_, std::bit_xor<uint8_t>()); return *this;}
-    template<typename InputIt>
-    void insert(InputIt first, InputIt last, size_t pos = 0) noexcept;
-    template<typename Container>
-    inline void insert(const Container& container, size_t pos = 0) noexcept { insert(std::begin(container), std::end(container), pos); }
+    inline SecureBuffer<N> &operator+=(const uint8_t (&op)[N]) noexcept
+        {std::transform(data_, data_ + N, op, data_, std::bit_xor<uint8_t>()); return *this;}
     struct Iterator;
     inline Iterator begin() noexcept { return Iterator(data_); }
     inline Iterator end() noexcept { return Iterator(data_ + N); };
@@ -57,13 +56,6 @@ SecureBuffer<N>::SecureBuffer(std::initializer_list<uint8_t> init) : SecureBuffe
 template <size_t N>
 SecureBuffer<N>::SecureBuffer(const SecureBuffer &original) noexcept : SecureBuffer() {
     std::copy(original.data_, original.data_ + N, data_);
-}
-
-template <size_t N>
-SecureBuffer<N> &SecureBuffer<N>::operator=(const SecureBuffer &other) noexcept {
-    if (this != &other)
-        std::copy(other.data_, other.data_ + N, data_);
-    return *this;
 }
 
 template <size_t N>
@@ -94,15 +86,6 @@ SecureBuffer<N> &SecureBuffer<N>::operator<<=(const size_t shift) noexcept {
         (*this)[N - 1] <<= bit_shift;
     }
     return *this;
-}
-
-template<size_t N>
-template<typename InputIt>
-void SecureBuffer<N>::insert(InputIt first, InputIt last, size_t pos) noexcept{
-    for (; pos <  N && first != last; ++pos) {
-        data_[pos] = *first;
-        ++first;
-    }
 }
 
 template<size_t N>

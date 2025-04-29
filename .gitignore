@@ -3,3 +3,4 @@ Build/*
 Документы/*.docx
 Lab1TestsData/*
 !Lab1TestsData/.gitkeep
+*sage.py
