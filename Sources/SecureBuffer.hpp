@@ -90,7 +90,7 @@ SecureBuffer<N> &SecureBuffer<N>::operator<<=(const size_t shift) noexcept {
 
 template<size_t N>
 struct SecureBuffer<N>::Iterator {
-    using iterator_category = std::forward_iterator_tag;
+    using iterator_category = std::random_access_iterator_tag;
     using difference_type   = std::ptrdiff_t;
     using value_type        = uint8_t;
     using pointer           = uint8_t *;
@@ -104,19 +104,23 @@ struct SecureBuffer<N>::Iterator {
     inline Iterator& operator--() noexcept { --ptr_; return *this; }  
     inline Iterator operator--(int) noexcept { Iterator tmp = *this; --(*this); return tmp; }
     inline bool operator==(const Iterator& b) const noexcept { return ptr_ == b.ptr_; }
-    inline bool operator!=(const Iterator& b) const noexcept { return ptr_ != b.ptr_; }   
+    inline bool operator!=(const Iterator& b) const noexcept { return ptr_ != b.ptr_; }
+    inline bool operator<(const Iterator& b) const noexcept { return ptr_ < b.ptr_; }
+    inline bool operator>(const Iterator& b) const noexcept { return ptr_ > b.ptr_; }
+    inline bool operator<=(const Iterator& b) const noexcept { return ptr_ <= b.ptr_; }
+    inline bool operator>=(const Iterator& b) const noexcept { return ptr_ >= b.ptr_; }
     inline Iterator &operator+=(size_t n) noexcept { ptr_ += n; return *this; }
     inline Iterator &operator-=(size_t n) noexcept { ptr_ -= n; return *this; }
     inline Iterator operator+(size_t n) const noexcept { return Iterator(ptr_ + n); }
     inline Iterator operator-(size_t n) const noexcept { return Iterator(ptr_ - n); }
-    inline size_t operator-(const Iterator &b) const noexcept {return ptr_ - b.ptr_; }
+    inline difference_type operator-(const Iterator &b) const noexcept {return ptr_ - b.ptr_; }
 private:
     pointer ptr_;
 };
 
 template<size_t N>
 struct SecureBuffer<N>::ConstIterator {
-    using iterator_category = std::forward_iterator_tag;
+    using iterator_category = std::random_access_iterator_tag;
     using difference_type   = std::ptrdiff_t;
     using value_type        = uint8_t;
     using pointer           = const uint8_t *;
@@ -130,12 +134,16 @@ struct SecureBuffer<N>::ConstIterator {
     inline ConstIterator& operator--() noexcept { --ptr_; return *this; }  
     inline ConstIterator operator--(int) noexcept { ConstIterator tmp = *this; --(*this); return tmp; }
     inline bool operator==(const ConstIterator& b) const noexcept { return ptr_ == b.ptr_; }
-    inline bool operator!=(const ConstIterator& b) const noexcept { return ptr_ != b.ptr_; }   
+    inline bool operator!=(const ConstIterator& b) const noexcept { return ptr_ != b.ptr_; }
+    inline bool operator<(const ConstIterator& b) const noexcept { return ptr_ < b.ptr_; }
+    inline bool operator>(const ConstIterator& b) const noexcept { return ptr_ > b.ptr_; }
+    inline bool operator<=(const ConstIterator& b) const noexcept { return ptr_ <= b.ptr_; }
+    inline bool operator>=(const ConstIterator& b) const noexcept { return ptr_ >= b.ptr_; }   
     inline ConstIterator &operator+=(size_t n) noexcept { ptr_ += n; return *this; }
     inline ConstIterator &operator-=(size_t n) noexcept { ptr_ -= n; return *this; }
     inline ConstIterator operator+(size_t n) const noexcept { return ConstIterator(ptr_ + n); }
     inline ConstIterator operator-(size_t n) const noexcept { return ConstIterator(ptr_ - n); }
-    inline size_t operator-(const ConstIterator &b) const noexcept {return ptr_ - b.ptr_; }
+    inline difference_type operator-(const ConstIterator &b) const noexcept {return ptr_ - b.ptr_; }
 private:
     pointer ptr_;
 };

@@ -20,8 +20,6 @@ public:
 #ifdef UNIT_TESTS
     SecureBuffer<16> &testSubstitute(SecureBuffer<16> &vector) noexcept;
     SecureBuffer<16> &testInverseSubstitute(SecureBuffer<16> &vector) noexcept;
-    SecureBuffer<16> &testR(SecureBuffer<16> &vector) noexcept;
-    SecureBuffer<16> &testInvR(SecureBuffer<16> &vector) noexcept;
     SecureBuffer<16> &testL(SecureBuffer<16> &vector) noexcept;
     SecureBuffer<16> &testInvL(SecureBuffer<16> &vector) noexcept;
 #endif
