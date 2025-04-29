@@ -2,40 +2,36 @@
 #include "SecureBuffer.hpp"
 
 TEST(SecureBufferTest, InitializerListConstructor) {
-    SecureBuffer<4> buffer = {1, 2, 3, 4};
+    SecureBuffer buffer = {1, 2, 3, 4};
     EXPECT_EQ(buffer[0], 1);
     EXPECT_EQ(buffer[1], 2);
     EXPECT_EQ(buffer[2], 3);
     EXPECT_EQ(buffer[3], 4);
 }
 
-TEST(SecureBufferTest, InitializerListConstructorThrowsOnOverflow) {
-    EXPECT_THROW((SecureBuffer<2>{1,2,3}), std::out_of_range);
-}
-
 TEST(SecureBufferTest, CopyConstructor) {
-    SecureBuffer<4> buffer1 = {5, 6, 7, 8};
-    SecureBuffer<4> buffer2 = buffer1;
+    SecureBuffer buffer1 = {5, 6, 7, 8};
+    SecureBuffer buffer2 = buffer1;
     EXPECT_EQ(buffer1, buffer2);
 }
 
 TEST(SecureBufferTest, AssignmentOperator) {
-    SecureBuffer<4> buffer1 = {1, 2, 3, 4};
+    SecureBuffer buffer1 = {1, 2, 3, 4};
     SecureBuffer<4> buffer2;
     buffer2 = buffer1;
     EXPECT_EQ(buffer1, buffer2);
 }
 
 TEST(SecureBufferTest, EqualityOperator) {
-    SecureBuffer<4> buffer1 = {9, 8, 7, 6};
-    SecureBuffer<4> buffer2 = {9, 8, 7, 6};
-    SecureBuffer<4> buffer3 = {6, 7, 8, 9};
+    SecureBuffer buffer1 = {9, 8, 7, 6};
+    SecureBuffer buffer2 = {9, 8, 7, 6};
+    SecureBuffer buffer3 = {6, 7, 8, 9};
     EXPECT_TRUE(buffer1 == buffer2);
     EXPECT_FALSE(buffer1 == buffer3);
 }
 
 TEST(SecureBufferTest, RawPointerAccess) {
-    SecureBuffer<4> buffer = {10, 20, 30, 40};
+    SecureBuffer buffer = {10, 20, 30, 40};
     uint8_t* raw = buffer.raw();
     ASSERT_NE(raw, nullptr);
     EXPECT_EQ(raw[0], 10);
@@ -45,7 +41,7 @@ TEST(SecureBufferTest, RawPointerAccess) {
 }
 
 TEST(SecureBufferTest, ZeroFunction) {
-    SecureBuffer<4> buffer = {1, 2, 3, 4};
+    SecureBuffer buffer = {1, 2, 3, 4};
     buffer.zero();
     for (size_t i = 0; i < 4; ++i) {
         EXPECT_EQ(buffer[i], 0);
@@ -53,7 +49,7 @@ TEST(SecureBufferTest, ZeroFunction) {
 }
 
 TEST(SecureBufferTest, LeftShiftOperator_NoShift) {
-    SecureBuffer<4> buffer = {1, 2, 3, 4};
+    SecureBuffer buffer = {1, 2, 3, 4};
     buffer <<= 0;
     EXPECT_EQ(buffer[0], 1);
     EXPECT_EQ(buffer[1], 2);
@@ -62,14 +58,14 @@ TEST(SecureBufferTest, LeftShiftOperator_NoShift) {
 }
 
 TEST(SecureBufferTest, LeftShiftOperator_SmallShift) {
-    SecureBuffer<2> buffer = {0b00000000, 0b11111111};
+    SecureBuffer buffer = {0b00000000, 0b11111111};
     buffer <<= 4;
     EXPECT_EQ(buffer[0], 0b00001111);
     EXPECT_EQ(buffer[1], 0b11110000);
 }
 
 TEST(SecureBufferTest, LeftShiftOperator_LargeShift) {
-    SecureBuffer<2> buffer = {0xFF, 0xFF};
+    SecureBuffer buffer = {0xFF, 0xFF};
     buffer <<= 16;
     for (size_t i = 0; i < 2; ++i) {
         EXPECT_EQ(buffer[i], 0);
@@ -77,15 +73,15 @@ TEST(SecureBufferTest, LeftShiftOperator_LargeShift) {
 }
 
 TEST(SecureBufferTest, AdditionOperator) {
-    SecureBuffer<2> buffer1 = {0b10101010, 0b01010101};
-    SecureBuffer<2> buffer2 = {0b11110000, 0b00001111};
+    SecureBuffer buffer1 = {0b10101010, 0b01010101};
+    SecureBuffer buffer2 = {0b11110000, 0b00001111};
     buffer1 += buffer2;
     EXPECT_EQ(buffer1[0], uint8_t(0b01011010));
     EXPECT_EQ(buffer1[1], uint8_t(0b01011010));
 }
 
 TEST(SecureBufferIteratorTest, BasicDereferenceAndIncrement) {
-    SecureBuffer<5> buf = {1, 2, 3, 4, 5};
+    SecureBuffer buf = {1, 2, 3, 4, 5};
     auto it = buf.begin();
     EXPECT_EQ(*it, 1);
     ++it;
@@ -99,7 +95,7 @@ TEST(SecureBufferIteratorTest, BasicDereferenceAndIncrement) {
 }
 
 TEST(SecureBufferIteratorTest, EqualityAndInequality) {
-    SecureBuffer<3> buf = {10, 20, 30};
+    SecureBuffer buf = {10, 20, 30};
     auto it1 = buf.begin();
     auto it2 = buf.begin();
     auto it3 = buf.end();
@@ -112,7 +108,7 @@ TEST(SecureBufferIteratorTest, EqualityAndInequality) {
 }
 
 TEST(SecureBufferIteratorTest, AdditionAndSubtractionOperators) {
-    SecureBuffer<4> buf = {5, 6, 7, 8};
+    SecureBuffer buf = {5, 6, 7, 8};
     auto it = buf.begin();
     it += 2;
     EXPECT_EQ(*it, 7);
@@ -125,14 +121,14 @@ TEST(SecureBufferIteratorTest, AdditionAndSubtractionOperators) {
 }
 
 TEST(SecureBufferIteratorTest, DifferenceOperator) {
-    SecureBuffer<6> buf = {0, 1, 2, 3, 4, 5};
+    SecureBuffer buf = {0, 1, 2, 3, 4, 5};
     auto it1 = buf.begin();
     auto it2 = it1 + 4;
     EXPECT_EQ(it2 - it1, 4);
 }
 
 TEST(SecureBufferIteratorTest, ModifyThroughIterator) {
-    SecureBuffer<3> buf = {1, 1, 1};
+    SecureBuffer buf = {1, 1, 1};
     auto it = buf.begin();
     *it = 10;
     ++it;
@@ -145,7 +141,7 @@ TEST(SecureBufferIteratorTest, ModifyThroughIterator) {
 }
 
 TEST(SecureBufferIteratorTest, FullIteration) {
-    SecureBuffer<4> buf = {2, 4, 6, 8};
+    SecureBuffer buf = {2, 4, 6, 8};
     int expected[] = {2, 4, 6, 8};
     size_t idx = 0;
     for (auto it = buf.begin(); it != buf.end(); ++it) {

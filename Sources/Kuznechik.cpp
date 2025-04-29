@@ -1,6 +1,4 @@
 #include "Kuznechik.hpp"
-#include <iostream>
-#include <iomanip>
 
 static constexpr uint8_t mul_table[8][256] = {
     // 148, 32, 133, 16, 194, 192, 1, 251, 1, 192, 194, 16, 133, 32, 148, 1
@@ -89,7 +87,6 @@ static inline SecureBuffer<16> &linear(SecureBuffer<16> &vector) noexcept {
 }
 
 static inline SecureBuffer<16> &inverseLinear(SecureBuffer<16> &vector) noexcept {
-    std::cerr << std::hex;
     for (uint8_t i = 0; i < 16; ++i) {
         vector[i] =
             mul_table[0][vector[(i + 1) % 16]]  ^
@@ -167,7 +164,7 @@ void Kuznechik::initKeySchedule(const SecureBuffer<32> &key) noexcept {
     }
 };
 
-Kuznechik::Kuznechik(const SecureBuffer<32> &key) {
+Kuznechik::Kuznechik(const SecureBuffer<32> &key) noexcept {
     initKeySchedule(key);
 }
 

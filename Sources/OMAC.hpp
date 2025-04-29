@@ -20,13 +20,13 @@ private:
             buf_[i] = 0;
     }
 public:
-    OMAC(const Cipher<BlockSize> &ctx);
+    OMAC(const Cipher<BlockSize> &ctx) noexcept;
     void update(const std::vector<uint8_t> &data) noexcept;
     std::vector<uint8_t> digest(const size_t size = BlockSize);
 #ifdef UNIT_TESTS
-    const SecureBuffer<BlockSize> &getAccumulator() const;
-    const SecureBuffer<BlockSize> &getKey1() const;
-    const SecureBuffer<BlockSize> &getKey2() const;
+    const SecureBuffer<BlockSize> &getAccumulator() const noexcept;
+    const SecureBuffer<BlockSize> &getKey1() const noexcept;
+    const SecureBuffer<BlockSize> &getKey2() const noexcept;
 #endif
 };
 
@@ -40,7 +40,7 @@ static inline void transformAdditionalKey(SecureBuffer<BlockSize> &key) noexcept
 }
 
 template <size_t BlockSize>
-OMAC<BlockSize>::OMAC(const Cipher<BlockSize> &ctx) : buffered_len_(0),  ctx_(ctx) {
+OMAC<BlockSize>::OMAC(const Cipher<BlockSize> &ctx) noexcept : buffered_len_(0),  ctx_(ctx) {
     static_assert(
         BlockSize == 8 || BlockSize == 16,
         "OMAC. Использование размеров блока, отличных от 64 и 128 бит пока не предусмотренно."
@@ -87,15 +87,15 @@ std::vector<uint8_t> OMAC<BlockSize>::digest(const size_t size) {
 
 #ifdef UNIT_TESTS
 template <size_t BlockSize>
-const SecureBuffer<BlockSize> &OMAC<BlockSize>::getAccumulator() const {
+const SecureBuffer<BlockSize> &OMAC<BlockSize>::getAccumulator() const noexcept {
     return accumulator_;
 }
 template <size_t BlockSize>
-const SecureBuffer<BlockSize> &OMAC<BlockSize>::getKey1() const {
+const SecureBuffer<BlockSize> &OMAC<BlockSize>::getKey1() const noexcept {
     return key1_;
 }
 template <size_t BlockSize>
-const SecureBuffer<BlockSize> &OMAC<BlockSize>::getKey2() const {
+const SecureBuffer<BlockSize> &OMAC<BlockSize>::getKey2() const noexcept {
     return key2_;
 }
 #endif

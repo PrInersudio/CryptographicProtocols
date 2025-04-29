@@ -4,7 +4,7 @@
 #include <format>
 #include "Lab1Utils.hpp"
 
-void checkTimestamp(const uint64_t timestamp_raw) {
+void checkTimestamp(const uint64_t timestamp_raw) noexcept {
     const auto timestamp =
         std::chrono::system_clock::time_point(std::chrono::seconds(timestamp_raw));
     const auto now = std::chrono::system_clock::now();
@@ -64,7 +64,7 @@ std::vector<uint8_t> parseHexString(const std::string& hex) {
     return result;
 }
 
-std::string toHexString(const std::vector<uint8_t> &data) {
+std::string toHexString(const std::vector<uint8_t> &data) noexcept {
     std::ostringstream oss;
     oss << std::hex << std::setfill('0');
     for (const auto &byte : data)
@@ -72,7 +72,7 @@ std::string toHexString(const std::vector<uint8_t> &data) {
     return oss.str();
 }
 
-bool fillBuffer(std::ifstream &file, std::vector<uint8_t> &buffer) {
+bool fillBuffer(std::ifstream &file, std::vector<uint8_t> &buffer) noexcept {
     buffer.resize(BUFFER_SIZE);
     file.read(reinterpret_cast<char *>(buffer.data()), BUFFER_SIZE);
     buffer.resize(file.gcount());

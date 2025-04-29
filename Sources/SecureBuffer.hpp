@@ -1,12 +1,11 @@
 #ifndef SECURE_BUFFER_HPP
 #define SECURE_BUFFER_HPP
 
-#include <stdlib.h>
 #include <cinttypes>
 #include <string.h>
 #include <sys/mman.h>
-#include <stdexcept>
 #include <algorithm>
+#include <functional>
 
 template <size_t N>
 class SecureBuffer {
@@ -44,13 +43,12 @@ SecureBuffer<N>::SecureBuffer() {
         throw std::bad_alloc();
 }
 
+template <typename... Ts>
+SecureBuffer(Ts...) -> SecureBuffer<sizeof...(Ts)>;
+
 template <size_t N>
 SecureBuffer<N>::SecureBuffer(std::initializer_list<uint8_t> init) : SecureBuffer() {
-    if (init.size() > N)
-        throw std::out_of_range
-            ("Слишком большой размер листа инициализации для SecureBuffer<" + std::to_string(N) + ">.");
     std::copy(init.begin(), init.end(), data_);
-    std::fill(data_ + init.size(), data_ + N, 0);
 }
 
 template <size_t N>
@@ -96,7 +94,7 @@ struct SecureBuffer<N>::Iterator {
     using pointer           = uint8_t *;
     using reference         = uint8_t &;
 
-    Iterator(const pointer ptr) : ptr_(ptr) {}
+    Iterator(const pointer ptr) noexcept : ptr_(ptr) {}
     inline reference operator*() const noexcept { return *ptr_; }
     inline pointer operator->() const noexcept { return ptr_; }
     inline Iterator& operator++() noexcept { ++ptr_; return *this; }  
@@ -126,7 +124,7 @@ struct SecureBuffer<N>::ConstIterator {
     using pointer           = const uint8_t *;
     using reference         = const uint8_t &;
 
-    ConstIterator(pointer ptr) : ptr_(ptr) {}
+    ConstIterator(pointer ptr) noexcept : ptr_(ptr) {}
     inline reference operator*() const noexcept { return *ptr_; }
     inline pointer operator->() const noexcept { return ptr_; }
     inline ConstIterator& operator++() noexcept { ++ptr_; return *this; }  
