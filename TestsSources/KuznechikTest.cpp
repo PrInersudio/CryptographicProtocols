@@ -38,7 +38,7 @@ TEST(KuznechikTest, TestInverseSubstitute) {
     EXPECT_EQ(testInverseSubstitute(vector2), vector1);
 }
 
-TEST(KuznechikTest, TestL) {
+TEST(KuznechikTest, TestLinear) {
     SecureBuffer<16> vector1 =
         { 0x64, 0xa5, 0x94, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
     SecureBuffer<16> vector2 =
@@ -49,13 +49,13 @@ TEST(KuznechikTest, TestL) {
         { 0x0e, 0x93, 0x69, 0x1a, 0x0c, 0xfc, 0x60, 0x40, 0x8b, 0x7b, 0x68, 0xf6, 0x6b, 0x51, 0x3c, 0x13 };
     SecureBuffer<16> vector5 =
         { 0xe6, 0xa8, 0x09, 0x4f, 0xee, 0x0a, 0xa2, 0x04, 0xfd, 0x97, 0xbc, 0xb0, 0xb4, 0x4b, 0x85, 0x80 };
-    EXPECT_EQ(testL(vector1), vector2);
-    EXPECT_EQ(testL(vector2), vector3);
-    EXPECT_EQ(testL(vector3), vector4);
-    EXPECT_EQ(testL(vector4), vector5);
+    EXPECT_EQ(testLinear(vector1), vector2);
+    EXPECT_EQ(testLinear(vector2), vector3);
+    EXPECT_EQ(testLinear(vector3), vector4);
+    EXPECT_EQ(testLinear(vector4), vector5);
 }
 
-TEST(KuznechikTest, TestInvL) {
+TEST(KuznechikTest, TestInverseLinear) {
     SecureBuffer<16> vector1 =
         { 0x64, 0xa5, 0x94, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
     SecureBuffer<16> vector2 =
@@ -66,10 +66,10 @@ TEST(KuznechikTest, TestInvL) {
         { 0x0e, 0x93, 0x69, 0x1a, 0x0c, 0xfc, 0x60, 0x40, 0x8b, 0x7b, 0x68, 0xf6, 0x6b, 0x51, 0x3c, 0x13 };
     SecureBuffer<16> vector5 =
         { 0xe6, 0xa8, 0x09, 0x4f, 0xee, 0x0a, 0xa2, 0x04, 0xfd, 0x97, 0xbc, 0xb0, 0xb4, 0x4b, 0x85, 0x80 };
-    EXPECT_EQ(testInvL(vector5), vector4);
-    EXPECT_EQ(testInvL(vector4), vector3);
-    EXPECT_EQ(testInvL(vector3), vector2);
-    EXPECT_EQ(testInvL(vector2), vector1);
+    EXPECT_EQ(testInverseLinear(vector5), vector4);
+    EXPECT_EQ(testInverseLinear(vector4), vector3);
+    EXPECT_EQ(testInverseLinear(vector3), vector2);
+    EXPECT_EQ(testInverseLinear(vector2), vector1);
 }
 
 TEST(KuznechikTest, TestKeySchedule) {
