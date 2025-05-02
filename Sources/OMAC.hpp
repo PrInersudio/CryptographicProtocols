@@ -7,7 +7,7 @@
 template <size_t BlockSize>
 class OMAC {
 private:
-    SecureBuffer<BlockSize> buf_;
+    uint8_t buf_[BlockSize];
     size_t buffered_len_;
     SecureBuffer<BlockSize> accumulator_;
     SecureBuffer<BlockSize> key1_;
@@ -63,7 +63,7 @@ void OMAC<BlockSize>::update(const std::vector<uint8_t> &data) noexcept {
         std::copy(
             data.begin() + current_index,
             data.begin() + current_index + to_copy,
-            buf_.begin() + buffered_len_
+            buf_ + buffered_len_
         );
         buffered_len_ += to_copy;
         current_index += to_copy;
