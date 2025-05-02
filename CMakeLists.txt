@@ -63,7 +63,7 @@ set (GOST_SAFETY_FLAGS
     -fstack-protector
 )
 add_compile_options(${GOST_SAFETY_FLAGS})
-add_compile_options(-O3 -static)
+add_compile_options(-O3)
 add_compile_options(
     $<$<OR:$<CONFIG:Debug>,$<CONFIG:UnitTests>>:-DUNIT_TESTS>
     $<$<CONFIG:Debug>:-fsanitize=address>
@@ -84,6 +84,7 @@ add_library(Lab1Utils OBJECT ${SOURCES_DIR}/Lab1Utils.cpp)
 # Сборка программ.
 add_executable(lab1 ${SOURCES_DIR}/Lab1Main.cpp)
 target_link_libraries(lab1 PRIVATE Kuznechik Lab1Utils)
+target_link_options(lab1 PRIVATE -static)
 
 # Сборка тестов.
 if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
