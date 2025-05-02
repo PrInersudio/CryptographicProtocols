@@ -63,7 +63,7 @@ set (GOST_SAFETY_FLAGS
     -fstack-protector
 )
 add_compile_options(${GOST_SAFETY_FLAGS})
-add_compile_options(-O3)
+add_compile_options(-O3 -static)
 add_compile_options(
     $<$<OR:$<CONFIG:Debug>,$<CONFIG:UnitTests>>:-DUNIT_TESTS>
     $<$<CONFIG:Debug>:-fsanitize=address>
