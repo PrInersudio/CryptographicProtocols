@@ -17,7 +17,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "DynamicTests")
 endif()
 
 # Флаги
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -O3")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -O3 -static")
 if (CMAKE_BUILD_TYPE STREQUAL "UnitTests")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUNIT_TESTS")
 endif()
