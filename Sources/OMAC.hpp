@@ -61,8 +61,8 @@ void OMAC<BlockSize>::update(const std::vector<uint8_t> &data) noexcept {
         }
         size_t to_copy = std::min(BlockSize - buffered_len_, data.size() - current_index);
         std::copy(
-            data.begin() + current_index,
-            data.begin() + current_index + to_copy,
+            data.begin() + static_cast<ptrdiff_t>(current_index),
+            data.begin() + static_cast<ptrdiff_t>(current_index + to_copy),
             buf_ + buffered_len_
         );
         buffered_len_ += to_copy;

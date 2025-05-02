@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.15...4.0)
 project(CryptographicProtocols LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;UnitTests;DynamicTests" CACHE STRING "" FORCE)
 message(STATUS "Сборка в режиме ${CMAKE_BUILD_TYPE}")
 
 # Отмечаем местонахождение исходных файлов.
@@ -10,18 +11,71 @@ set(TESTS_SOURCES_DIR ${CMAKE_SOURCE_DIR}/TestsSources)
 set(LAB1_TESTS_DATA_DIR ${CMAKE_SOURCE_DIR}/Lab1TestsData)
 include_directories(${SOURCES_DIR})
 
+# Флаги
+set (WARNING_FLAGS
+    -Werror
+    -pedantic-errors
+
+    -Wall
+    -Wextra
+    -Wpedantic
+
+    -Wcast-align
+    -Wcast-qual
+    -Wconversion
+    -Wctor-dtor-privacy
+    -Wduplicated-branches
+    -Wduplicated-cond
+    -Wextra-semi
+    -Wfloat-equal
+    -Wlogical-op
+    -Wnon-virtual-dtor
+    -Wold-style-cast
+    -Woverloaded-virtual
+    -Wredundant-decls
+    -Wsign-conversion
+    -Wsign-promo
+)
+add_compile_options(${WARNING_FLAGS})
+set (GOST_SAFETY_FLAGS
+    -fwrapv -fwrapv-pointer
+    -fno-strict-aliasing
+    -fno-delete-null-pointer-checks
+    -D_FORTIFY_SOURCE=2
+    -fstack-protector-strong
+    -fPIE -fPIC -fpic
+    -fno-builtin-fprintf -fno-builtin-fwprintf
+    -fno-builtin-printf -fno-builtin-snprintf
+    -fno-builtin-sprintf -fno-builtin-swprintf
+    -fno-builtin-wprintf
+    -fno-builtin-memcpy -fno-builtin-memmove
+    -fno-builtin-memset -fno-builtin-strcat
+    -fno-builtin-strcpy -fno-builtin-strncat
+    -fno-builtin-strncpy -fno-builtin-wcscat
+    -fno-builtin-scwcpy -fno-builtin-wcsncat
+    -fno-builtin-wcsncpy -fno-builtin-wmemcpy
+    -fno-builtin-wmemmove -fno-builtin-wmemset
+    -Wclobbered
+    -Warray-bounds
+    -Wdiv-by-zero
+    -Wshift-count-negative -Wshift-count-overflow
+    -fpic
+    -fstack-protector
+)
+add_compile_options(${GOST_SAFETY_FLAGS})
+add_compile_options(-O3)
+add_compile_options(
+    $<$<OR:$<CONFIG:Debug>,$<CONFIG:UnitTests>>:-DUNIT_TESTS>
+    $<$<CONFIG:Debug>:-fsanitize=address>
+    $<$<CONFIG:Debug>:-g>
+    $<$<CONFIG:DynamicTests>:-g>
+)
+
+
 if (CMAKE_BUILD_TYPE STREQUAL "DynamicTests")
-    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -O3 -g")
     add_executable(SecureBufferDynamicTest ${TESTS_SOURCES_DIR}/SecureBufferDynamicTest.cpp)
     return()
 endif()
-
-# Флаги
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -O3 -static")
-if (CMAKE_BUILD_TYPE STREQUAL "UnitTests")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUNIT_TESTS")
-endif()
-set(CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS} -fsanitize=address -g -DUNIT_TESTS")
 
 # Сборка модулей.
 add_library(Kuznechik OBJECT ${SOURCES_DIR}/Kuznechik.cpp)

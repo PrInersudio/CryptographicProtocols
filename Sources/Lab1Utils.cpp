@@ -58,7 +58,7 @@ std::vector<uint8_t> parseHexString(const std::string& hex) {
     std::vector<uint8_t> result;
     result.reserve(hex.length() / 2);
     for (size_t i = 0; i < hex.length(); i += 2) {
-        uint8_t byte = std::stoi(hex.substr(i, 2), nullptr, 16);
+        uint8_t byte = static_cast<uint8_t>(std::stoi(hex.substr(i, 2), nullptr, 16));
         result.push_back(byte);
     }
     return result;
@@ -75,6 +75,6 @@ std::string toHexString(const std::vector<uint8_t> &data) noexcept {
 bool fillBuffer(std::ifstream &file, std::vector<uint8_t> &buffer) noexcept {
     buffer.resize(BUFFER_SIZE);
     file.read(reinterpret_cast<char *>(buffer.data()), BUFFER_SIZE);
-    buffer.resize(file.gcount());
+    buffer.resize(static_cast<std::vector<uint8_t>::size_type>(file.gcount()));
     return !file.eof();
 }

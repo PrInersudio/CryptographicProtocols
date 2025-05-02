@@ -69,43 +69,43 @@ static inline SecureBuffer<16> &inverseSubstitute(SecureBuffer<16> &vector) noex
 static inline SecureBuffer<16> &linear(SecureBuffer<16> &vector) noexcept {
     for (uint8_t i = 0; i < 16; ++i)
         vector[15 - i] =
-            mul_table[0][vector[(16 - i)  % 16]] ^
-            mul_table[1][vector[(17 - i)  % 16]] ^
-            mul_table[2][vector[(18 - i)  % 16]] ^
-            mul_table[3][vector[(19 - i)  % 16]] ^
-            mul_table[4][vector[(20 - i)  % 16]] ^
-            mul_table[5][vector[(21 - i)  % 16]] ^
-                         vector[(22 - i)  % 16]  ^
-            mul_table[6][vector[(23 - i)  % 16]] ^
-                         vector[(24 - i)  % 16]  ^
-            mul_table[5][vector[(25 - i)  % 16]] ^
-            mul_table[4][vector[(26 - i)  % 16]] ^
-            mul_table[3][vector[(27 - i)  % 16]] ^
-            mul_table[2][vector[(28 - i)  % 16]] ^
-            mul_table[1][vector[(29 - i)  % 16]] ^
-            mul_table[0][vector[(30 - i)  % 16]] ^
-                         vector[(31 - i)  % 16];
+            mul_table[0][vector[static_cast<size_t>((16 - i)  % 16)]] ^
+            mul_table[1][vector[static_cast<size_t>((17 - i)  % 16)]] ^
+            mul_table[2][vector[static_cast<size_t>((18 - i)  % 16)]] ^
+            mul_table[3][vector[static_cast<size_t>((19 - i)  % 16)]] ^
+            mul_table[4][vector[static_cast<size_t>((20 - i)  % 16)]] ^
+            mul_table[5][vector[static_cast<size_t>((21 - i)  % 16)]] ^
+                         vector[static_cast<size_t>((22 - i)  % 16)]  ^
+            mul_table[6][vector[static_cast<size_t>((23 - i)  % 16)]] ^
+                         vector[static_cast<size_t>((24 - i)  % 16)]  ^
+            mul_table[5][vector[static_cast<size_t>((25 - i)  % 16)]] ^
+            mul_table[4][vector[static_cast<size_t>((26 - i)  % 16)]] ^
+            mul_table[3][vector[static_cast<size_t>((27 - i)  % 16)]] ^
+            mul_table[2][vector[static_cast<size_t>((28 - i)  % 16)]] ^
+            mul_table[1][vector[static_cast<size_t>((29 - i)  % 16)]] ^
+            mul_table[0][vector[static_cast<size_t>((30 - i)  % 16)]] ^
+                         vector[static_cast<size_t>((31 - i)  % 16)];
     return vector;
 }
 
 static inline SecureBuffer<16> &inverseLinear(SecureBuffer<16> &vector) noexcept {
     for (uint8_t i = 0; i < 16; ++i) {
         vector[i] =
-            mul_table[0][vector[(i + 1) % 16]]  ^
-            mul_table[1][vector[(i + 2) % 16]]  ^
-            mul_table[2][vector[(i + 3) % 16]]  ^
-            mul_table[3][vector[(i + 4) % 16]]  ^
-            mul_table[4][vector[(i + 5) % 16]]  ^
-            mul_table[5][vector[(i + 6) % 16]]  ^
-                         vector[(i + 7) % 16]   ^
-            mul_table[6][vector[(i + 8) % 16]]  ^
-                         vector[(i + 9) % 16]   ^
-            mul_table[5][vector[(i + 10) % 16]] ^
-            mul_table[4][vector[(i + 11) % 16]] ^
-            mul_table[3][vector[(i + 12) % 16]] ^
-            mul_table[2][vector[(i + 13) % 16]] ^
-            mul_table[1][vector[(i + 14) % 16]] ^
-            mul_table[0][vector[(i + 15) % 16]] ^
+            mul_table[0][vector[static_cast<size_t>((i + 1) % 16)]]  ^
+            mul_table[1][vector[static_cast<size_t>((i + 2) % 16)]]  ^
+            mul_table[2][vector[static_cast<size_t>((i + 3) % 16)]]  ^
+            mul_table[3][vector[static_cast<size_t>((i + 4) % 16)]]  ^
+            mul_table[4][vector[static_cast<size_t>((i + 5) % 16)]]  ^
+            mul_table[5][vector[static_cast<size_t>((i + 6) % 16)]]  ^
+                         vector[static_cast<size_t>((i + 7) % 16)]   ^
+            mul_table[6][vector[static_cast<size_t>((i + 8) % 16)]]  ^
+                         vector[static_cast<size_t>((i + 9) % 16)]   ^
+            mul_table[5][vector[static_cast<size_t>((i + 10) % 16)]] ^
+            mul_table[4][vector[static_cast<size_t>((i + 11) % 16)]] ^
+            mul_table[3][vector[static_cast<size_t>((i + 12) % 16)]] ^
+            mul_table[2][vector[static_cast<size_t>((i + 13) % 16)]] ^
+            mul_table[1][vector[static_cast<size_t>((i + 14) % 16)]] ^
+            mul_table[0][vector[static_cast<size_t>((i + 15) % 16)]] ^
                          vector[i];
     }
     return vector;

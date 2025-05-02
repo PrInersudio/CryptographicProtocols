@@ -31,7 +31,7 @@ public:
         {std::transform(data_, data_ + N, op, data_, std::bit_xor<uint8_t>()); return *this;}
     struct Iterator;
     inline Iterator begin() noexcept { return Iterator(data_); }
-    inline Iterator end() noexcept { return Iterator(data_ + N); };
+    inline Iterator end() noexcept { return Iterator(data_ + N); }
     struct ConstIterator;
     inline ConstIterator begin() const noexcept { return ConstIterator(data_); }
     inline ConstIterator end() const noexcept { return ConstIterator(data_ + N); }

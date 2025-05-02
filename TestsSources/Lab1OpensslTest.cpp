@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <openssl/cmac.h>
-#include <openssl/engine.h>
+#include <openssl/provider.h>
+#include <openssl/evp.h>
 #include <stdexcept>
 #include <fstream>
 #include <random>
@@ -9,81 +9,55 @@
 
 #define TestFilesFolder "../Lab1TestsData/"
 
-class OpenSSLKuznechik {
-private:
-    ENGINE *gost_engine_;
-    const EVP_CIPHER *cipher_;
-public:
-    OpenSSLKuznechik();
-    ~OpenSSLKuznechik();
-    const EVP_CIPHER *cipher() const;
-};
-
-OpenSSLKuznechik::OpenSSLKuznechik() {
-    gost_engine_ = ENGINE_by_id("gost");
-    if (!gost_engine_)
-        throw std::runtime_error("Ошибка загрузки gost_engine.");
-    if (!ENGINE_init(gost_engine_)) {
-        ENGINE_free(gost_engine_);
-        throw std::runtime_error("Ошибка инициализации gost_engine.");
-    }
-    if (!ENGINE_set_default(gost_engine_, ENGINE_METHOD_ALL)) {
-        ENGINE_finish(gost_engine_);
-        ENGINE_free(gost_engine_);
-        throw std::runtime_error("Ошибка установки gost_engine как default.");
-    }
-    cipher_ = EVP_get_cipherbyname("kuznyechik-cbc");
-    if (!cipher_) {
-        ENGINE_finish(gost_engine_);
-        ENGINE_free(gost_engine_);
-        throw std::runtime_error("Ошибка получения kuznyechik-cbc.");
-    }
-}
-
-OpenSSLKuznechik::~OpenSSLKuznechik() {
-    ENGINE_finish(gost_engine_);
-    ENGINE_free(gost_engine_);
-}
-
-const EVP_CIPHER *OpenSSLKuznechik::cipher() const {
-    return cipher_;
-}
-
 class OpenSSLKuznechikOMAC {
 private:
-    CMAC_CTX* ctx_;
+    EVP_MAC_CTX* ctx_;
+    EVP_MAC* mac_;
 public:
-    OpenSSLKuznechikOMAC(const OpenSSLKuznechik &cipher, const SecureBuffer<32> &key);
+    OpenSSLKuznechikOMAC(const SecureBuffer<32> &key);
     ~OpenSSLKuznechikOMAC();
     void update(const std::vector<uint8_t> &data);
     std::vector<uint8_t> digest(const size_t size = 16);
 };
 
-OpenSSLKuznechikOMAC::OpenSSLKuznechikOMAC(const OpenSSLKuznechik &cipher, const SecureBuffer<32> &key) {
-    ctx_ = CMAC_CTX_new();
-    if (!ctx_) throw std::runtime_error("Ошибка создания контекса CMAC.");
-    if (!CMAC_Init(ctx_, key.raw(), 32, cipher.cipher(), nullptr)) {
-        CMAC_CTX_free(ctx_);
-        throw std::runtime_error("CMAC initialization with Kuznyechik failed");
+OpenSSLKuznechikOMAC::OpenSSLKuznechikOMAC(const SecureBuffer<32> &key) {
+    mac_ = EVP_MAC_fetch(nullptr, "CMAC", nullptr);
+    if (!mac_) throw std::runtime_error("Не удалось получить MAC CMAC.");
+    ctx_ = EVP_MAC_CTX_new(mac_);
+    if (!ctx_) {
+        EVP_MAC_free(mac_);
+        throw std::runtime_error("Не удалось создать MAC контекст.");
+    }
+    char cipher_name[] = "kuznyechik-cbc";
+    OSSL_PARAM params[] = {
+        OSSL_PARAM_construct_utf8_string("cipher", cipher_name, 0),
+        OSSL_PARAM_END
+    };
+    if (!EVP_MAC_init(ctx_, key.raw(), 32, params)) {
+        EVP_MAC_CTX_free(ctx_);
+        EVP_MAC_free(mac_);
+        throw std::runtime_error("Ошибка инициализации CMAC.");
     }
 }
 
 OpenSSLKuznechikOMAC::~OpenSSLKuznechikOMAC() {
-    CMAC_CTX_free(ctx_);
+    EVP_MAC_CTX_free(ctx_);
+    EVP_MAC_free(mac_);
 }
 
 void OpenSSLKuznechikOMAC::update(const std::vector<uint8_t> &data) {
-    if (!CMAC_Update(ctx_, data.data(), data.size()))
-        throw std::runtime_error("Ошибка обновления CMAC");
+    if (!EVP_MAC_update(ctx_, data.data(), data.size()))
+        throw std::runtime_error("Ошибка обновления CMAC.");
 }
 
 std::vector<uint8_t> OpenSSLKuznechikOMAC::digest(const size_t size) {
-    if (size > 16)
-        throw std::out_of_range("Запрошен размер MAC больше длины блока выбранного шифра.");
-    uint8_t result[16];
-    if (!CMAC_Final(ctx_, result, nullptr))
-        throw std::runtime_error("Ошибка CMAC_Final.");
-    return std::vector<uint8_t>(result, result + size);
+    uint8_t out[EVP_MAX_MD_SIZE];
+    size_t out_len = 0;
+    if (!EVP_MAC_final(ctx_, out, &out_len, sizeof(out)))
+        throw std::runtime_error("Ошибка получения финального значения CMAC.");
+    if (size > out_len)
+        throw std::out_of_range("Размер MAC превышает допустимый.");
+    return std::vector<uint8_t>(out, out + size);
 }
 
 namespace RandKeyGenerator {
@@ -98,7 +72,6 @@ namespace RandKeyGenerator {
     }
 }
 
-static const OpenSSLKuznechik cipher;
 static const SecureBuffer key = {
     0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
@@ -109,7 +82,7 @@ static const SecureBuffer key = {
 TEST(ConstKey, MB1) {
     std::ifstream file(TestFilesFolder "1MB.bin", std::ios::binary);
     if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "1MB.bin.");
-    OpenSSLKuznechikOMAC ctx(cipher, key);
+    OpenSSLKuznechikOMAC ctx(key);
     std::vector<uint8_t> buf;
     while (fillBuffer(file, buf))
         ctx.update(buf);
@@ -120,7 +93,7 @@ TEST(ConstKey, MB1) {
 TEST(ConstKey, MB100) {
     std::ifstream file(TestFilesFolder "100MB.bin", std::ios::binary);
     if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "100MB.bin.");
-    OpenSSLKuznechikOMAC ctx(cipher, key);
+    OpenSSLKuznechikOMAC ctx(key);
     std::vector<uint8_t> buf;
     while (fillBuffer(file, buf))
         ctx.update(buf);
@@ -131,7 +104,7 @@ TEST(ConstKey, MB100) {
 TEST(ConstKey, MB1000) {
     std::ifstream file(TestFilesFolder "1000MB.bin", std::ios::binary);
     if (!file) throw std::runtime_error("Не удалось открыть" TestFilesFolder "1000MB.bin.");
-    OpenSSLKuznechikOMAC ctx(cipher, key);
+    OpenSSLKuznechikOMAC ctx(key);
     std::vector<uint8_t> buf;
     while (fillBuffer(file, buf))
         ctx.update(buf);
@@ -144,7 +117,7 @@ TEST(VariableKey, Blocks10) {
     if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "1MBlocks.bin.");
     std::vector<uint8_t> buf(160);
     for (uint32_t i = 0; i < 100000; ++i) {
-        OpenSSLKuznechikOMAC ctx(cipher, RandKeyGenerator::genRandKey());
+        OpenSSLKuznechikOMAC ctx(RandKeyGenerator::genRandKey());
         file.read(reinterpret_cast<char *>(buf.data()), 160);
         ctx.update(buf);
         ctx.digest();
@@ -156,7 +129,7 @@ TEST(VariableKey, Blocks100) {
     if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "1MBlocks.bin.");
     std::vector<uint8_t> buf(1600);
     for (uint32_t i = 0; i < 10000; ++i) {
-        OpenSSLKuznechikOMAC ctx(cipher, RandKeyGenerator::genRandKey());
+        OpenSSLKuznechikOMAC ctx(RandKeyGenerator::genRandKey());
         file.read(reinterpret_cast<char *>(buf.data()), 1600);
         ctx.update(buf);
         ctx.digest();
@@ -168,7 +141,7 @@ TEST(VariableKey, Blocks1000) {
     if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "1MBlocks.bin.");
     std::vector<uint8_t> buf(16000);
     for (uint32_t i = 0; i < 1000; ++i) {
-        OpenSSLKuznechikOMAC ctx(cipher, RandKeyGenerator::genRandKey());
+        OpenSSLKuznechikOMAC ctx(RandKeyGenerator::genRandKey());
         file.read(reinterpret_cast<char *>(buf.data()), 16000);
         ctx.update(buf);
         ctx.digest();

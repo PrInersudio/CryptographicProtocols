@@ -7,9 +7,9 @@
 
 TEST(CheckTimestampTest, ValidTimestamp) {
     testing::internal::CaptureStdout();
-    const uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+    const uint64_t timestamp = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::seconds>(
         (std::chrono::system_clock::now() - std::chrono::years(1)).time_since_epoch()
-    ).count();
+    ).count());
     checkTimestamp(timestamp);
     std::string output = testing::internal::GetCapturedStdout();
     EXPECT_NE(output.find("Срок действия ключа подходит к концу!"), std::string::npos);
@@ -17,9 +17,9 @@ TEST(CheckTimestampTest, ValidTimestamp) {
 
 TEST(CheckTimestampTest, ExpiredTimestamp) {
     testing::internal::CaptureStdout();
-    const uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+    const uint64_t timestamp = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::seconds>(
         (std::chrono::system_clock::now() - std::chrono::years(1) - std::chrono::months(6)).time_since_epoch()
-    ).count();
+    ).count());
     checkTimestamp(timestamp);
     std::string output = testing::internal::GetCapturedStdout();
     EXPECT_NE(output.find("Срок действия ключа подошёл к концу!"), std::string::npos);
@@ -27,9 +27,9 @@ TEST(CheckTimestampTest, ExpiredTimestamp) {
 
 TEST(CheckTimestampTest, ValidKey) {
     testing::internal::CaptureStdout();
-    uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+    uint64_t timestamp = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()
-    ).count();
+    ).count());
     checkTimestamp(timestamp);
     std::string output = testing::internal::GetCapturedStdout();
     EXPECT_NE(output.find("Проверка срока действия ключа прошла успешно."), std::string::npos);
@@ -37,9 +37,9 @@ TEST(CheckTimestampTest, ValidKey) {
 
 TEST(InitKuznechikCTXTest, FileReadSuccess) {
     std::ofstream file("test_key.bin", std::ios::binary);
-    uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+    uint64_t timestamp = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::seconds>(
         (std::chrono::system_clock::now() - std::chrono::years(1)).time_since_epoch()
-    ).count();
+    ).count());
     #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     timestamp = __builtin_bswap64(timestamp);
     #endif
