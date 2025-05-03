@@ -121,13 +121,11 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
         COMMAND bash -c "dd if=/dev/urandom of=${LAB1_TESTS_DATA_DIR}/1MBlocks.bin bs=16000000 count=1"
     )
     
-    add_executable(Lab1Test ${TESTS_SOURCES_DIR}/Lab1Test.cpp)
-    target_link_libraries(Lab1Test PRIVATE Lab1Utils Kuznechik GTest::GTest)
-
     find_package(OpenSSL QUIET)
     if(OpenSSL_FOUND)
-        add_executable(Lab1OpensslTest ${TESTS_SOURCES_DIR}/Lab1OpensslTest.cpp)
-        target_link_libraries(Lab1OpensslTest PRIVATE OpenSSL::SSL OpenSSL::Crypto  Lab1Utils Kuznechik GTest::GTest)
+        find_package(benchmark REQUIRED)
+        add_executable(Lab1Test ${TESTS_SOURCES_DIR}/Lab1Test.cpp)
+        target_link_libraries(Lab1Test PRIVATE OpenSSL::SSL OpenSSL::Crypto Lab1Utils Kuznechik benchmark::benchmark)
     endif()
 
 endif()
