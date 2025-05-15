@@ -3,7 +3,7 @@
 #ifndef UNIT_TESTS
 #define UNIT_TESTS
 #endif
-#include "Lab1Utils.hpp"
+#include "Utils.hpp"
 
 TEST(CheckTimestampTest, ValidTimestamp) {
     testing::internal::CaptureStdout();

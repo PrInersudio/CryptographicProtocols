@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include "OMAC.hpp"
-#include "Lab1Utils.hpp"
+#include "Utils.hpp"
 
 int main(int argc, char **argv) {
     if (argc < 3) {

@@ -15,15 +15,18 @@ public:
     SecureBuffer();
     SecureBuffer(std::initializer_list<uint8_t> init);
     SecureBuffer(const SecureBuffer &original) noexcept;
-    inline SecureBuffer& operator=(const SecureBuffer &other) noexcept
-        { if (this != &other) std::copy(other.data_, other.data_ + N, data_); return *this; }
+    SecureBuffer(SecureBuffer &&other);
+    inline SecureBuffer& operator=(const SecureBuffer &original) noexcept
+        { if (this != &original) std::copy(original.data_, original.data_ + N, data_); return *this; }
+    inline SecureBuffer& operator=(SecureBuffer &&original) noexcept
+        { if (this != &original) {std::copy(original.data_, original.data_ + N, data_); original.zero();} return *this; }
     ~SecureBuffer() noexcept;
     inline uint8_t &operator[](const size_t i) noexcept { return data_[i]; }
     inline const uint8_t &operator[](const size_t i) const noexcept { return data_[i]; }
     inline bool operator==(const SecureBuffer &other) const noexcept { return !memcmp(data_, other.data_, N); }
     inline uint8_t *raw() noexcept { return data_; }
     inline const uint8_t *raw() const noexcept { return data_; }
-    inline void zero() noexcept { explicit_bzero(data_, N); }
+    inline void zero() noexcept { memset(data_, 0, N); }
     SecureBuffer<N> &operator<<=(const size_t shift) noexcept;
     inline SecureBuffer<N> &operator+=(const SecureBuffer<N> &op) noexcept
         {std::transform(data_, data_ + N, op.data_, data_, std::bit_xor<uint8_t>()); return *this;}
@@ -54,6 +57,12 @@ SecureBuffer<N>::SecureBuffer(std::initializer_list<uint8_t> init) : SecureBuffe
 template <size_t N>
 SecureBuffer<N>::SecureBuffer(const SecureBuffer &original) noexcept : SecureBuffer() {
     std::copy(original.data_, original.data_ + N, data_);
+}
+
+template <size_t N>
+SecureBuffer<N>::SecureBuffer(SecureBuffer &&original) : SecureBuffer() {
+    std::copy(original.data_, original.data_ + N, data_);
+    original.zero();
 }
 
 template <size_t N>

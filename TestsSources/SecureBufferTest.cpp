@@ -80,6 +80,32 @@ TEST(SecureBufferTest, AdditionOperator) {
     EXPECT_EQ(buffer1[1], uint8_t(0b01011010));
 }
 
+TEST(SecureBufferTest, MoveConstructor) {
+    SecureBuffer original = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    SecureBuffer moved(std::move(original));
+    for (size_t i = 0; i < 10; ++i)
+        EXPECT_EQ(moved[i], i + 1);
+    for (size_t i = 0; i < 10; ++i)
+        EXPECT_EQ(original[i], 0);
+}
+
+TEST(SecureBufferTest, MoveAssignmentOperator) {
+    SecureBuffer original = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    SecureBuffer<10> assigned;
+    assigned = std::move(original);
+    for (size_t i = 0; i < 10; ++i)
+        EXPECT_EQ(assigned[i], i + 1);
+    for (size_t i = 0; i < 10; ++i)
+        EXPECT_EQ(original[i], 0);
+}
+
+TEST(SecureBufferTest, AssignmentToSelf) {
+    SecureBuffer original = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    original = original;
+    for (size_t i = 0; i < 10; ++i)
+        EXPECT_EQ(original[i], i + 1);
+}
+
 TEST(SecureBufferIteratorTest, BasicDereferenceAndIncrement) {
     SecureBuffer buf = {1, 2, 3, 4, 5};
     auto it = buf.begin();

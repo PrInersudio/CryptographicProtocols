@@ -1,65 +1,12 @@
 #include <benchmark/benchmark.h>
-#include <openssl/provider.h>
-#include <openssl/evp.h>
-#include <stdexcept>
 #include <fstream>
 #include <random>
 #include "SecureBuffer.hpp"
-#include "Lab1Utils.hpp"
+#include "Utils.hpp"
 #include "OMAC.hpp"
+#include "OpenSSLKuznechikOMAC.hpp"
 
 #define TestFilesFolder "../Lab1TestsData/"
-
-class OpenSSLKuznechikOMAC {
-private:
-    EVP_MAC_CTX* ctx_;
-    EVP_MAC* mac_;
-public:
-    OpenSSLKuznechikOMAC(const SecureBuffer<32> &key);
-    ~OpenSSLKuznechikOMAC();
-    void update(const std::vector<uint8_t> &data);
-    std::vector<uint8_t> digest(const size_t size = 16);
-};
-
-OpenSSLKuznechikOMAC::OpenSSLKuznechikOMAC(const SecureBuffer<32> &key) {
-    mac_ = EVP_MAC_fetch(nullptr, "CMAC", nullptr);
-    if (!mac_) throw std::runtime_error("Не удалось получить MAC CMAC.");
-    ctx_ = EVP_MAC_CTX_new(mac_);
-    if (!ctx_) {
-        EVP_MAC_free(mac_);
-        throw std::runtime_error("Не удалось создать MAC контекст.");
-    }
-    char cipher_name[] = "kuznyechik-cbc";
-    OSSL_PARAM params[] = {
-        OSSL_PARAM_construct_utf8_string("cipher", cipher_name, 0),
-        OSSL_PARAM_END
-    };
-    if (!EVP_MAC_init(ctx_, key.raw(), 32, params)) {
-        EVP_MAC_CTX_free(ctx_);
-        EVP_MAC_free(mac_);
-        throw std::runtime_error("Ошибка инициализации CMAC.");
-    }
-}
-
-OpenSSLKuznechikOMAC::~OpenSSLKuznechikOMAC() {
-    EVP_MAC_CTX_free(ctx_);
-    EVP_MAC_free(mac_);
-}
-
-void OpenSSLKuznechikOMAC::update(const std::vector<uint8_t> &data) {
-    if (!EVP_MAC_update(ctx_, data.data(), data.size()))
-        throw std::runtime_error("Ошибка обновления CMAC.");
-}
-
-std::vector<uint8_t> OpenSSLKuznechikOMAC::digest(const size_t size) {
-    uint8_t out[EVP_MAX_MD_SIZE];
-    size_t out_len = 0;
-    if (!EVP_MAC_final(ctx_, out, &out_len, sizeof(out)))
-        throw std::runtime_error("Ошибка получения финального значения CMAC.");
-    if (size > out_len)
-        throw std::out_of_range("Размер MAC превышает допустимый.");
-    return std::vector<uint8_t>(out, out + size);
-}
 
 namespace RandKeyGenerator {
     // Не криптостойкий ГСЧ используется только в рамках тестирования.

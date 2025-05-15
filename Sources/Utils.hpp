@@ -5,6 +5,7 @@
 
 #define BUFFER_SIZE 8192
 
+
 void checkTimestamp(const uint64_t timestamp_raw) noexcept;
 void initKuznechikCTX(Kuznechik &ctx, const char *filename);
 bool checkModeParam(const char *mode_param, bool &encrypt);

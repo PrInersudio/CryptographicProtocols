@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.15...4.0)
 project(CryptographicProtocols LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;UnitTests;DynamicTests" CACHE STRING "" FORCE)
 message(STATUS "Сборка в режиме ${CMAKE_BUILD_TYPE}")
 
 # Отмечаем местонахождение исходных файлов.
@@ -70,6 +69,10 @@ add_compile_options(
     $<$<CONFIG:Debug>:-g>
     $<$<CONFIG:DynamicTests>:-g>
 )
+add_link_options(
+    $<$<CONFIG:Debug>:-fsanitize=address>
+    $<$<CONFIG:Release>:-static>
+)
 
 
 if (CMAKE_BUILD_TYPE STREQUAL "DynamicTests")
@@ -79,12 +82,17 @@ endif()
 
 # Сборка модулей.
 add_library(Kuznechik OBJECT ${SOURCES_DIR}/Kuznechik.cpp)
-add_library(Lab1Utils OBJECT ${SOURCES_DIR}/Lab1Utils.cpp)
+add_library(Utils OBJECT ${SOURCES_DIR}/Utils.cpp)
+add_library(Streebog OBJECT ${SOURCES_DIR}/Streebog.cpp)
 
 # Сборка программ.
 add_executable(lab1 ${SOURCES_DIR}/Lab1Main.cpp)
-target_link_libraries(lab1 PRIVATE Kuznechik Lab1Utils)
-target_link_options(lab1 PRIVATE -static)
+target_link_libraries(lab1 PRIVATE Kuznechik Utils)
+target_link_options(lab1 PRIVATE)
+
+add_executable(lab2 ${SOURCES_DIR}/Lab2Main.cpp)
+target_link_libraries(lab2 PRIVATE Streebog Kuznechik Utils)
+target_link_options(lab2 PRIVATE)
 
 # Сборка тестов.
 if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
@@ -104,9 +112,17 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
     target_link_libraries(OMACTest PRIVATE Kuznechik GTest::GTest)
     add_test(NAME OMACTest COMMAND OMACTest)
 
-    add_executable(Lab1UtilsTest ${TESTS_SOURCES_DIR}/Lab1UtilsTest.cpp)
-    target_link_libraries(Lab1UtilsTest PRIVATE Lab1Utils Kuznechik GTest::GTest)
-    add_test(NAME Lab1UtilsTest COMMAND Lab1UtilsTest)
+    add_executable(UtilsTest ${TESTS_SOURCES_DIR}/UtilsTest.cpp)
+    target_link_libraries(UtilsTest PRIVATE Utils Kuznechik GTest::GTest)
+    add_test(NAME UtilsTest COMMAND UtilsTest)
+
+    add_executable(StreebogTest ${TESTS_SOURCES_DIR}/StreebogTest.cpp)
+    target_link_libraries(StreebogTest PRIVATE Streebog GTest::GTest)
+    add_test(NAME StreebogTest COMMAND StreebogTest)
+
+    add_executable(HMACTest ${TESTS_SOURCES_DIR}/HMACTest.cpp)
+    target_link_libraries(HMACTest PRIVATE Streebog GTest::GTest)
+    add_test(NAME HMACTest COMMAND HMACTest)
 
     execute_process(
         COMMAND bash -c "dd if=/dev/urandom of=${LAB1_TESTS_DATA_DIR}/1MB.bin bs=1M count=1"
@@ -123,9 +139,25 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
     
     find_package(OpenSSL QUIET)
     if(OpenSSL_FOUND)
+
+        add_library(OpenSSLKuznechikOMAC OBJECT ${SOURCES_DIR}/OpenSSLKuznechikOMAC.cpp)
+
+        add_executable(NMAC256Test ${TESTS_SOURCES_DIR}/NMAC256Test.cpp)
+        target_link_libraries(NMAC256Test PRIVATE Streebog OpenSSL::SSL OpenSSL::Crypto GTest::GTest)
+        add_test(NAME NMAC256Test COMMAND NMAC256Test)
+
+        add_executable(KDF_R_13235651022Test ${TESTS_SOURCES_DIR}/KDF_R_13235651022Test.cpp)
+        target_link_libraries(KDF_R_13235651022Test PRIVATE Streebog Kuznechik OpenSSLKuznechikOMAC OpenSSL::SSL OpenSSL::Crypto GTest::GTest)
+        add_test(NAME KDF_R_13235651022Test COMMAND KDF_R_13235651022Test)
+
         find_package(benchmark REQUIRED)
+
         add_executable(Lab1Test ${TESTS_SOURCES_DIR}/Lab1Test.cpp)
-        target_link_libraries(Lab1Test PRIVATE OpenSSL::SSL OpenSSL::Crypto Lab1Utils Kuznechik benchmark::benchmark)
+        target_link_libraries(Lab1Test PRIVATE OpenSSL::SSL OpenSSL::Crypto Utils Kuznechik OpenSSLKuznechikOMAC benchmark::benchmark)
+
+        add_executable(Lab2Test ${TESTS_SOURCES_DIR}/Lab2Test.cpp)
+        target_link_libraries(Lab2Test PRIVATE OpenSSL::SSL OpenSSL::Crypto Streebog Kuznechik OpenSSLKuznechikOMAC benchmark::benchmark)
+
     endif()
 
 endif()
