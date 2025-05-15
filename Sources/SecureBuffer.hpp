@@ -6,6 +6,7 @@
 #include <sys/mman.h>
 #include <algorithm>
 #include <functional>
+#include <random>
 
 template <size_t N>
 class SecureBuffer {
@@ -67,7 +68,12 @@ SecureBuffer<N>::SecureBuffer(SecureBuffer &&original) : SecureBuffer() {
 
 template <size_t N>
 SecureBuffer<N>::~SecureBuffer() noexcept {
-    explicit_bzero(data_, N);
+    thread_local std::random_device rd;
+    thread_local std::mt19937 gen(rd());
+    thread_local std::uniform_int_distribution dist(0, 255);
+    
+    for (size_t i = 0; i < N; ++i)
+        data_[i] = static_cast<uint8_t>(dist(gen));
     munlock(data_, N);
 }
 
