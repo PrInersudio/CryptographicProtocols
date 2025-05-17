@@ -51,7 +51,41 @@ TEST(KDF_R_13235651022Test, TestFirstNMACSecondNMAC) {
     EXPECT_EQ(key1, key2);
 }
 
-TEST(KDF_R_13235651022Test, TestFirstNMACSecondHMAC) {
+TEST(KDF_R_13235651022Test, TestFirstNMACSecondHMAC256) {
+    static const SecureBuffer<128> master_key = filled<128>(0xAA);
+    static const SecureBuffer<128> salt = filled<128>(0xBB);
+    uint8_t IV[32];
+    memset(IV, 0xCC, 32);
+    uint8_t application_info[32];
+    memset(application_info, 0xDD, 32);
+    uint8_t user_info[16];
+    memset(user_info, 0xEE, 16);
+    uint8_t additional_info[16];
+    memset(additional_info, 0xFF, 16);
+    KDF_R_13235651022<
+        FirstStageVariants::NMAC,
+        SecondStageVariants::HMAC256,
+        128, 128
+    > kdf(master_key, salt);
+    OpenSSLKDF_R_13235651022<
+        OpenSSLFirstStageVariants::NMAC,
+        OpenSSLSecondStageVariants::HMAC256,
+        128, 128
+    > openssl_kdf(master_key, salt);
+    SecureBuffer<256> key1;
+    SecureBuffer<256> key2;
+    kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
+    openssl_kdf.fetch(key2.raw(), 256, IV, application_info, user_info, additional_info);
+    std::cout << "Key1: ";
+    PrintTo(key1, &std::cout);
+    std::cout << std::endl;
+    std::cout << "Key2: ";
+    PrintTo(key2, &std::cout);
+    std::cout << std::endl;
+    EXPECT_EQ(key1, key2);
+}
+
+TEST(KDF_R_13235651022Test, TestFirstNMACSecondHMAC512) {
     static const SecureBuffer<128> master_key = filled<128>(0xAA);
     static const SecureBuffer<128> salt = filled<128>(0xBB);
     uint8_t IV[64];
@@ -64,12 +98,12 @@ TEST(KDF_R_13235651022Test, TestFirstNMACSecondHMAC) {
     memset(additional_info, 0xFF, 16);
     KDF_R_13235651022<
         FirstStageVariants::NMAC,
-        SecondStageVariants::HMAC,
+        SecondStageVariants::HMAC512,
         128, 128
     > kdf(master_key, salt);
     OpenSSLKDF_R_13235651022<
         OpenSSLFirstStageVariants::NMAC,
-        OpenSSLSecondStageVariants::HMAC,
+        OpenSSLSecondStageVariants::HMAC512,
         128, 128
     > openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
@@ -153,7 +187,41 @@ TEST(KDF_R_13235651022Test, TestFirstHMACSecondNMAC) {
     EXPECT_EQ(key1, key2);
 }
 
-TEST(KDF_R_13235651022Test, TestFirstHMACSecondHMAC) {
+TEST(KDF_R_13235651022Test, TestFirstHMACSecondHMAC256) {
+    static const SecureBuffer<128> master_key = filled<128>(0xAA);
+    static const SecureBuffer<128> salt = filled<128>(0xBB);
+    uint8_t IV[32];
+    memset(IV, 0xCC, 32);
+    uint8_t application_info[32];
+    memset(application_info, 0xDD, 32);
+    uint8_t user_info[16];
+    memset(user_info, 0xEE, 16);
+    uint8_t additional_info[16];
+    memset(additional_info, 0xFF, 16);
+    KDF_R_13235651022<
+        FirstStageVariants::HMAC,
+        SecondStageVariants::HMAC256,
+        128, 128
+    > kdf(master_key, salt);
+    OpenSSLKDF_R_13235651022<
+        OpenSSLFirstStageVariants::HMAC,
+        OpenSSLSecondStageVariants::HMAC256,
+        128, 128
+    > openssl_kdf(master_key, salt);
+    SecureBuffer<256> key1;
+    SecureBuffer<256> key2;
+    kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
+    openssl_kdf.fetch(key2.raw(), 256, IV, application_info, user_info, additional_info);
+    std::cout << "Key1: ";
+    PrintTo(key1, &std::cout);
+    std::cout << std::endl;
+    std::cout << "Key2: ";
+    PrintTo(key2, &std::cout);
+    std::cout << std::endl;
+    EXPECT_EQ(key1, key2);
+}
+
+TEST(KDF_R_13235651022Test, TestFirstHMACSecondHMAC512) {
     static const SecureBuffer<128> master_key = filled<128>(0xAA);
     static const SecureBuffer<128> salt = filled<128>(0xBB);
     uint8_t IV[64];
@@ -166,12 +234,12 @@ TEST(KDF_R_13235651022Test, TestFirstHMACSecondHMAC) {
     memset(additional_info, 0xFF, 16);
     KDF_R_13235651022<
         FirstStageVariants::HMAC,
-        SecondStageVariants::HMAC,
+        SecondStageVariants::HMAC512,
         128, 128
     > kdf(master_key, salt);
     OpenSSLKDF_R_13235651022<
         OpenSSLFirstStageVariants::HMAC,
-        OpenSSLSecondStageVariants::HMAC,
+        OpenSSLSecondStageVariants::HMAC512,
         128, 128
     > openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
@@ -255,7 +323,41 @@ TEST(KDF_R_13235651022Test, TestFirstSimpleSecondNMAC) {
     EXPECT_EQ(key1, key2);
 }
 
-TEST(KDF_R_13235651022Test, TestFirstSimpleSecondHMAC) {
+TEST(KDF_R_13235651022Test, TestFirstSimpleSecondHMAC256) {
+    static const SecureBuffer<32> master_key = filled<32>(0xAA);
+    static const SecureBuffer<32> salt = filled<32>(0xBB);
+    uint8_t IV[32];
+    memset(IV, 0xCC, 32);
+    uint8_t application_info[32];
+    memset(application_info, 0xDD, 32);
+    uint8_t user_info[16];
+    memset(user_info, 0xEE, 16);
+    uint8_t additional_info[16];
+    memset(additional_info, 0xFF, 16);
+    KDF_R_13235651022<
+        FirstStageVariants::Simple,
+        SecondStageVariants::HMAC256,
+        32, 32
+    > kdf(master_key, salt);
+    OpenSSLKDF_R_13235651022<
+        OpenSSLFirstStageVariants::Simple,
+        OpenSSLSecondStageVariants::HMAC256,
+        32, 32
+    > openssl_kdf(master_key, salt);
+    SecureBuffer<256> key1;
+    SecureBuffer<256> key2;
+    kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
+    openssl_kdf.fetch(key2.raw(), 256, IV, application_info, user_info, additional_info);
+    std::cout << "Key1: ";
+    PrintTo(key1, &std::cout);
+    std::cout << std::endl;
+    std::cout << "Key2: ";
+    PrintTo(key2, &std::cout);
+    std::cout << std::endl;
+    EXPECT_EQ(key1, key2);
+}
+
+TEST(KDF_R_13235651022Test, TestFirstSimpleSecondHMAC512) {
     static const SecureBuffer<32> master_key = filled<32>(0xAA);
     static const SecureBuffer<32> salt = filled<32>(0xBB);
     uint8_t IV[64];
@@ -268,12 +370,12 @@ TEST(KDF_R_13235651022Test, TestFirstSimpleSecondHMAC) {
     memset(additional_info, 0xFF, 16);
     KDF_R_13235651022<
         FirstStageVariants::Simple,
-        SecondStageVariants::HMAC,
+        SecondStageVariants::HMAC512,
         32, 32
     > kdf(master_key, salt);
     OpenSSLKDF_R_13235651022<
         OpenSSLFirstStageVariants::Simple,
-        OpenSSLSecondStageVariants::HMAC,
+        OpenSSLSecondStageVariants::HMAC512,
         32, 32
     > openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;

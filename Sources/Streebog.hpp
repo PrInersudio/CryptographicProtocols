@@ -92,9 +92,7 @@ public:
 };
 
 #ifdef UNIT_TESTS
-SecureBuffer<64> &testSubstitute(SecureBuffer<64> &vector) noexcept;
-SecureBuffer<64> &testPermutate(SecureBuffer<64> &vector) noexcept;
-SecureBuffer<64> &testLinear(SecureBuffer<64> &vector) noexcept;
+SecureBuffer<64> &testLPS(SecureBuffer<64> &vector) noexcept;
 #endif
 
 #endif

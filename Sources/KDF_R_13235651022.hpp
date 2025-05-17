@@ -9,7 +9,7 @@
 #include "OMAC.hpp"
 
 enum class FirstStageVariants { NMAC = 0, HMAC = 1, Simple = 2 };
-enum class SecondStageVariants { NMAC = 0, HMAC = 1, CMAC = 2 };
+enum class SecondStageVariants { NMAC = 0, HMAC256 = 1, HMAC512 = 2, CMAC = 3 };
 
 template <SecondStageVariants V>
 struct SecondStageMACParams;
@@ -21,7 +21,13 @@ struct SecondStageMACParams<SecondStageVariants::NMAC> {
 };
 
 template <>
-struct SecondStageMACParams<SecondStageVariants::HMAC> {
+struct SecondStageMACParams<SecondStageVariants::HMAC256> {
+    static constexpr size_t BlockSize = 64;
+    static constexpr size_t DigestSize = 32;
+};
+
+template <>
+struct SecondStageMACParams<SecondStageVariants::HMAC512> {
     static constexpr size_t BlockSize = 64;
     static constexpr size_t DigestSize = 64;
 };
@@ -43,7 +49,8 @@ private:
     static constexpr size_t SecondStageMACBlockSize = SecondStageMACParams<SecondStageVariant>::BlockSize;
     static constexpr size_t SecondStageMACDigestSize = SecondStageMACParams<SecondStageVariant>::DigestSize;
     std::unique_ptr<Kuznechik> cipher_;
-    std::unique_ptr<Streebog512> hasher_;
+    std::unique_ptr<Streebog256> hasher256_;
+    std::unique_ptr<Streebog512> hasher512_;
     std::unique_ptr<MAC<SecondStageMACBlockSize, SecondStageMACDigestSize>> second_stage_macer_;
 
     static void firstStage(
@@ -124,9 +131,13 @@ void KDF_R_13235651022<
 >::initSecondStageMacer(SecureBuffer<32> &inner_key) noexcept {
     if constexpr (SecondStageVariant == SecondStageVariants::NMAC)
         second_stage_macer_ = std::make_unique<NMAC256<32>>(inner_key);
-    else if constexpr (SecondStageVariant == SecondStageVariants::HMAC) {
-        hasher_ = std::make_unique<Streebog512>();
-        second_stage_macer_ = std::make_unique<HMAC<64, 64, 32>>(*hasher_, inner_key);
+    else if constexpr (SecondStageVariant == SecondStageVariants::HMAC256) {
+        hasher256_ = std::make_unique<Streebog256>();
+        second_stage_macer_ = std::make_unique<HMAC<64, 32, 32>>(*hasher256_, inner_key);
+    }
+    else if constexpr (SecondStageVariant == SecondStageVariants::HMAC512) {
+        hasher512_ = std::make_unique<Streebog512>();
+        second_stage_macer_ = std::make_unique<HMAC<64, 64, 32>>(*hasher512_, inner_key);
     }
     else {
         cipher_ = std::make_unique<Kuznechik>(inner_key);

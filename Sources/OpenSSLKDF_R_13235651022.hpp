@@ -3,12 +3,13 @@
 
 #include <endian.h>
 #include <memory>
+#include "OpenSSLStreebog256HMAC.hpp"
 #include "OpenSSLStreebog512HMAC.hpp"
 #include "OpenSSLNMAC256.hpp"
 #include "OpenSSLKuznechikOMAC.hpp"
 
 enum class OpenSSLFirstStageVariants { NMAC = 0, HMAC = 1, Simple = 2 };
-enum class OpenSSLSecondStageVariants { NMAC = 0, HMAC = 1, CMAC = 2 };
+enum class OpenSSLSecondStageVariants { NMAC = 0, HMAC256 = 1, HMAC512 = 2, CMAC = 3 };
 
 template <OpenSSLSecondStageVariants V>
 struct OpenSSLSecondStageMACParams;
@@ -20,7 +21,13 @@ struct OpenSSLSecondStageMACParams<OpenSSLSecondStageVariants::NMAC> {
 };
 
 template <>
-struct OpenSSLSecondStageMACParams<OpenSSLSecondStageVariants::HMAC> {
+struct OpenSSLSecondStageMACParams<OpenSSLSecondStageVariants::HMAC256> {
+    static constexpr size_t BlockSize = 64;
+    static constexpr size_t DigestSize = 32;
+};
+
+template <>
+struct OpenSSLSecondStageMACParams<OpenSSLSecondStageVariants::HMAC512> {
     static constexpr size_t BlockSize = 64;
     static constexpr size_t DigestSize = 64;
 };
@@ -111,7 +118,9 @@ void OpenSSLKDF_R_13235651022<
 >::initSecondStageMacer(SecureBuffer<32> &inner_key) noexcept {
     if constexpr (SecondStageVariant == OpenSSLSecondStageVariants::NMAC)
         second_stage_macer_ = std::make_unique<OpenSSLNMAC256<32>>(inner_key);
-    else if constexpr (SecondStageVariant == OpenSSLSecondStageVariants::HMAC)
+    else if constexpr (SecondStageVariant == OpenSSLSecondStageVariants::HMAC256)
+        second_stage_macer_ = std::make_unique<OpenSSLStreebog256HMAC<32>>(inner_key);
+    else if constexpr (SecondStageVariant == OpenSSLSecondStageVariants::HMAC512)
         second_stage_macer_ = std::make_unique<OpenSSLStreebog512HMAC<32>>(inner_key);
     else second_stage_macer_ = std::make_unique<OpenSSLKuznechikOMAC>(inner_key);
 }

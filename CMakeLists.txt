@@ -103,26 +103,32 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
     add_executable(SecureBufferTest ${TESTS_SOURCES_DIR}/SecureBufferTest.cpp)
     target_link_libraries(SecureBufferTest PRIVATE GTest::GTest)
     add_test(NAME SecureBufferTest COMMAND SecureBufferTest)
+    set_tests_properties(SecureBufferTest PROPERTIES LABELS "Lab1")
     
     add_executable(KuznechikTest ${TESTS_SOURCES_DIR}/KuznechikTest.cpp)
     target_link_libraries(KuznechikTest PRIVATE Kuznechik GTest::GTest)
     add_test(NAME KuznechikTest COMMAND KuznechikTest)
+    set_tests_properties(KuznechikTest PROPERTIES LABELS "Lab1")
 
     add_executable(OMACTest ${TESTS_SOURCES_DIR}/OMACTest.cpp)
     target_link_libraries(OMACTest PRIVATE Kuznechik GTest::GTest)
     add_test(NAME OMACTest COMMAND OMACTest)
+    set_tests_properties(OMACTest PROPERTIES LABELS "Lab1")
 
     add_executable(UtilsTest ${TESTS_SOURCES_DIR}/UtilsTest.cpp)
     target_link_libraries(UtilsTest PRIVATE Utils Kuznechik GTest::GTest)
     add_test(NAME UtilsTest COMMAND UtilsTest)
+    set_tests_properties(UtilsTest PROPERTIES LABELS "Lab1")
 
     add_executable(StreebogTest ${TESTS_SOURCES_DIR}/StreebogTest.cpp)
     target_link_libraries(StreebogTest PRIVATE Streebog GTest::GTest)
     add_test(NAME StreebogTest COMMAND StreebogTest)
+    set_tests_properties(StreebogTest PROPERTIES LABELS "Lab2")
 
     add_executable(HMACTest ${TESTS_SOURCES_DIR}/HMACTest.cpp)
     target_link_libraries(HMACTest PRIVATE Streebog GTest::GTest)
     add_test(NAME HMACTest COMMAND HMACTest)
+    set_tests_properties(HMACTest PROPERTIES LABELS "Lab2")
 
     execute_process(
         COMMAND bash -c "dd if=/dev/urandom of=${LAB1_TESTS_DATA_DIR}/1MB.bin bs=1M count=1"
@@ -145,10 +151,12 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
         add_executable(NMAC256Test ${TESTS_SOURCES_DIR}/NMAC256Test.cpp)
         target_link_libraries(NMAC256Test PRIVATE Streebog OpenSSL::SSL OpenSSL::Crypto GTest::GTest)
         add_test(NAME NMAC256Test COMMAND NMAC256Test)
+        set_tests_properties(NMAC256Test PROPERTIES LABELS "Lab2")
 
         add_executable(KDF_R_13235651022Test ${TESTS_SOURCES_DIR}/KDF_R_13235651022Test.cpp)
         target_link_libraries(KDF_R_13235651022Test PRIVATE Streebog Kuznechik OpenSSLKuznechikOMAC OpenSSL::SSL OpenSSL::Crypto GTest::GTest)
         add_test(NAME KDF_R_13235651022Test COMMAND KDF_R_13235651022Test)
+        set_tests_properties(KDF_R_13235651022Test PROPERTIES LABELS "Lab2")
 
         find_package(benchmark REQUIRED)
 

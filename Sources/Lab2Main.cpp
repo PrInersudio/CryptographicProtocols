@@ -87,7 +87,7 @@ static void printHelp(const char* progName) noexcept {
         "\n"
         "Дополнительные параметры:\n"
         "  -f <вариант>    Первый этап: NMAC | HMAC | Simple (по умолчанию: NMAC)\n"
-        "  -s <вариант>    Второй этап: NMAC | HMAC | CMAC (по умолчанию: CMAC)\n"
+        "  -s <вариант>    Второй этап: NMAC | HMAC256 | HMAC512 | CMAC (по умолчанию: CMAC)\n"
         "  -u <строка>     Информация о пользователе (до 16 байт: обрезается при превышении,\n"
         "                 дополняется нулями при недостатке, по умолчанию все байты — 0)\n"
         "  -a <строка>     Доп. информация (до 16 байт: обрезается при превышении,\n"
@@ -140,8 +140,10 @@ static int getParams(Params &params, int argc, char **argv) noexcept {
                 std::string second_stage_string(optarg);
                 if (second_stage_string == "NMAC")
                     params.second_stage_variant = SecondStageVariants::NMAC;
-                else if (second_stage_string == "HMAC")
-                    params.second_stage_variant = SecondStageVariants::HMAC;
+                else if (second_stage_string == "HMAC256")
+                    params.second_stage_variant = SecondStageVariants::HMAC256;
+                else if (second_stage_string == "HMAC512")
+                    params.second_stage_variant = SecondStageVariants::HMAC512;
                 else if (second_stage_string == "CMAC")
                     params.second_stage_variant = SecondStageVariants::CMAC;
                 else {
@@ -270,8 +272,12 @@ int main(int argc, char **argv) {
                 rc = getOrCheckFileMac<SecondStageVariants::NMAC>(params);
                 break;
             }
-            case SecondStageVariants::HMAC: {
-                rc = getOrCheckFileMac<SecondStageVariants::HMAC>(params);
+            case SecondStageVariants::HMAC256: {
+                rc = getOrCheckFileMac<SecondStageVariants::HMAC256>(params);
+                break;
+            }
+            case SecondStageVariants::HMAC512: {
+                rc = getOrCheckFileMac<SecondStageVariants::HMAC512>(params);
                 break;
             }
             case SecondStageVariants::CMAC: {
