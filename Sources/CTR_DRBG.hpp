@@ -35,28 +35,8 @@ private:
     SecureBuffer<CipherType::BlockSize> state_;
     size_t reseed_counter_;
     CipherType cipher_;
-    
-#ifndef CTR_DRBG_BIG_ENDIAN_STATE
-    inline void incState() noexcept {
-        uint16_t carry = 1;
-        for (size_t i = 0; i < CipherType::BlockSize && carry; ++i) {
-            carry = static_cast<uint16_t>(state_[i]) + carry;
-            state_[i] = static_cast<uint8_t>(carry);
-            carry >>= 8;
-        }
-    }
+
     void update(const SecureBuffer<SeedLen> &provided_data) noexcept;
-#else
-    inline void incState() noexcept {
-        uint16_t carry = 1;
-        for (size_t i = 0; i < CipherType::BlockSize && carry; ++i) {
-            carry = static_cast<uint16_t>(state_[CipherType::BlockSize - 1 - i]) + carry;
-            state_[CipherType::BlockSize - 1 - i] = static_cast<uint8_t>(carry);
-            carry >>= 8;
-        }
-    }
-    void update(const SecureBuffer<SeedLen> &provided_data) noexcept;
-#endif
 public:
     inline CTR_DRBG(
         const uint8_t *personalization_string  = nullptr,
@@ -95,13 +75,13 @@ void CTR_DRBG<CipherType, AutoReseed, EntropySourceType>::update(const SecureBuf
     SecureBuffer<SeedLen> temp;
     SecureBuffer<CipherType::BlockSize> block;
     for (size_t i = 0; i < num_of_blocks; ++i) {
-        incState();
+        state_.add(1);
         block = state_;
         cipher_.encrypt(block);
         std::copy(block.begin(), block.end(), temp.begin() + i * CipherType::BlockSize);
     }
     if constexpr (remainder > 0) {
-        incState();
+        state_.add(1);
         block = state_;
         cipher_.encrypt(block);
         std::copy(block.begin(), block.begin() + remainder,
@@ -138,13 +118,13 @@ int CTR_DRBG<CipherType, AutoReseed, EntropySourceType>::operator()(
     size_t remainder = size % CipherType::BlockSize;
     SecureBuffer<CipherType::BlockSize> block;
     for (size_t i = 0; i < num_of_blocks; ++i) {
-        incState();
+        state_.add(1);
         block = state_;
         cipher_.encrypt(block);
         memcpy(buffer + i * CipherType::BlockSize, block.raw(), CipherType::BlockSize);
     }
     if (remainder > 0) {
-        incState();
+        state_.add(1);
         block = state_;
         cipher_.encrypt(block);
         memcpy(buffer + (size - remainder), block.raw(), remainder);

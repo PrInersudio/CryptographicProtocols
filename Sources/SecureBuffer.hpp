@@ -39,6 +39,7 @@ public:
     struct ConstIterator;
     inline ConstIterator begin() const noexcept { return ConstIterator(data_); }
     inline ConstIterator end() const noexcept { return ConstIterator(data_ + N); }
+    SecureBuffer<N> &add(const size_t num);
 };
 
 template <size_t N>
@@ -100,6 +101,57 @@ SecureBuffer<N> &SecureBuffer<N>::operator<<=(const size_t shift) noexcept {
     }
     return *this;
 }
+
+
+#ifndef SECUREBUFFER_BIG_ENDIAN_CONTER
+template<size_t N>
+SecureBuffer<N> &SecureBuffer<N>::add(size_t num) {
+    uint16_t carry = 0;
+    size_t i = 0;
+    for (; i < std::min(sizeof(size_t), N) && num; ++i) {
+        carry = static_cast<uint16_t>(
+            static_cast<uint16_t>(data_[i]) +
+            static_cast<uint16_t>(num & 0xFF) +
+            (carry >> 8)
+        );
+        data_[i] = static_cast<uint8_t>(carry);
+        num >>= 8;
+    }
+    carry >>= 8;
+    for (; i < N && carry; ++i) {
+        carry =
+            static_cast<uint16_t>(data_[i]) +
+            carry;
+        data_[i] = static_cast<uint8_t>(carry);
+        carry >>= 8;
+    }
+    return *this;
+}
+#else
+template<size_t N>
+SecureBuffer<N> &SecureBuffer<N>::add(size_t num) {
+    uint16_t carry = 0;
+    size_t i = 0;
+    for (; i < std::min(sizeof(size_t), N) && num; ++i) {
+        carry = static_cast<uint16_t>(
+            static_cast<uint16_t>(data_[N - 1 - i]) +
+            static_cast<uint16_t>(num & 0xFF) +
+            (carry >> 8)
+        );
+        data_[N - 1 - i] = static_cast<uint8_t>(carry);
+        num >>= 8;
+    }
+    carry >>= 8;
+    for (; i < N && carry; ++i) {
+        carry =
+            static_cast<uint16_t>(data_[N - 1 - i]) +
+            carry;
+        data_[N - 1 - i] = static_cast<uint8_t>(carry);
+        carry >>= 8;
+    }
+    return *this;
+}
+#endif
 
 template<size_t N>
 struct SecureBuffer<N>::Iterator {

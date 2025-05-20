@@ -1563,19 +1563,6 @@ void Streebog::compress(const SecureBuffer<64> &N, const SecureBuffer<64> &m) no
     (hash_ += E) += m;
 }
 
-void Streebog::addToN(const uint16_t addition) noexcept {
-    uint16_t tmp =
-        static_cast<uint16_t>(N_[0]) +
-        addition;
-    N_[0] = static_cast<uint8_t>(tmp);
-    tmp >>= 8;
-    for (size_t i = 1; i < 64 && tmp; ++i) {
-        tmp = static_cast<uint16_t>(N_[i]) + tmp;
-        N_[i] = static_cast<uint8_t>(tmp);
-        tmp >>= 8;
-    }
-}
-
 void Streebog::addToSum() noexcept {
     uint16_t tmp = 0;
     for (size_t i = 0; i < 64; ++i) {
@@ -1606,7 +1593,7 @@ void Streebog::update(const uint8_t *data, const size_t size) noexcept {
         if (buffered_length_ == 64) {
             buffered_length_ = 0;
             compress(N_, buffer_);
-            addToN(512);
+            N_.add(512);
             addToSum();
         }
         uint8_t to_copy = static_cast<uint8_t>(
@@ -1633,7 +1620,7 @@ void Streebog::finalize() noexcept {
         buffered_length_ = 0;
     }
     compress(N_, buffer_);
-    addToN(static_cast<uint16_t>(buffered_length_) * 8);
+    N_.add(static_cast<uint16_t>(buffered_length_) * 8);
     addToSum();
     SecureBuffer<64> zeroed; zeroed.zero();
     compress(zeroed, N_);
@@ -1687,9 +1674,6 @@ SecureBuffer<64> &Streebog::getN() noexcept {
 
 SecureBuffer<64> &Streebog::getSum() noexcept {
     return Sum_;
-}
-void Streebog::testAddToN(const uint16_t addition) noexcept {
-    addToN(addition);
 }
 void Streebog::testAddToSum() noexcept {
     addToSum();

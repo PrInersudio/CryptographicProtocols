@@ -106,6 +106,29 @@ TEST(SecureBufferTest, AssignmentToSelf) {
         EXPECT_EQ(original[i], i + 1);
 }
 
+#ifndef SECUREBUFFER_BIG_ENDIAN_CONTER
+TEST(SecureBufferTest, Add) {
+    SecureBuffer<4> buf; buf.zero();
+    buf.add(1);
+    EXPECT_EQ(buf, SecureBuffer<4>({1,0,0,0}));
+    buf.add(255);
+    EXPECT_EQ(buf, SecureBuffer<4>({0,1,0,0}));
+    buf.add(0x10000);
+    EXPECT_EQ(buf, SecureBuffer<4>({0,1,1,0}));
+}
+#else
+TEST(SecureBufferTest, Add) {
+    SecureBuffer<4> buf; buf.zero();
+    buf.add(1);
+    EXPECT_EQ(buf, SecureBuffer<4>({0,0,0,1}));
+    buf.add(255);
+    EXPECT_EQ(buf, SecureBuffer<4>({0,0,1,0}));
+    buf.add(0x10000);
+    EXPECT_EQ(buf, SecureBuffer<4>({0,1,1,0}));
+}
+#endif
+
+
 TEST(SecureBufferIteratorTest, BasicDereferenceAndIncrement) {
     SecureBuffer buf = {1, 2, 3, 4, 5};
     auto it = buf.begin();

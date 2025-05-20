@@ -342,14 +342,6 @@ TEST(StreebogTest, TestZeroUpdate) {
         hasher.getBuffer().begin() + 32));
 }
 
-TEST(StreebogTest, TestAddToN) {
-    Streebog512 hasher;
-    hasher.testAddToN(512);
-    SecureBuffer<64> expected_N;
-    expected_N.zero(); expected_N[1] = 0x2;
-    EXPECT_EQ(hasher.getN(), expected_N);
-}
-
 TEST(StreebogTest, TestDigest512) {
     static const std::vector<uint8_t> messages[] = {
         {

@@ -29,7 +29,6 @@ public:
     SecureBuffer<64> &getHash() noexcept;
     SecureBuffer<64> &getN() noexcept;
     SecureBuffer<64> &getSum() noexcept;
-    void testAddToN(const uint16_t addition) noexcept;
     void testAddToSum() noexcept;
     void testCompress(const SecureBuffer<64> &N, const SecureBuffer<64> &m) noexcept;
 #endif
@@ -47,7 +46,6 @@ private:
     const Variant variant_;
     
     void initHash();
-    void addToN(const uint16_t addition) noexcept;
     void addToSum() noexcept;
     void compress(const SecureBuffer<64> &N, const SecureBuffer<64> &m) noexcept;
     void finalize() noexcept;
