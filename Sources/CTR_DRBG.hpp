@@ -2,6 +2,12 @@
 #define CTR_DRBG_HPP
 
 #include <fstream>
+
+#ifndef DONT_USE_TBB
+#include <tbb/parallel_for.h>
+#include <tbb/blocked_range.h>
+#endif
+
 #include "Cipher.hpp"
 #include "Hash.hpp"
 #include "EntropySource.hpp"
@@ -116,6 +122,19 @@ int CTR_DRBG<CipherType, AutoReseed, EntropySourceType>::operator()(
     }
     size_t num_of_blocks = size / CipherType::BlockSize;
     size_t remainder = size % CipherType::BlockSize;
+    #ifndef DONT_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, num_of_blocks, 128),
+    [&](const tbb::blocked_range<size_t>& r) {
+        SecureBuffer<CipherType::BlockSize> block;
+        for (size_t i = r.begin(); i != r.end(); ++i) {
+            block = state_;
+            block.add(i + 1);
+            cipher_.encrypt(block);
+            memcpy(buffer + i * CipherType::BlockSize, block.raw(), CipherType::BlockSize);
+        }
+    });
+    state_.add(num_of_blocks);
+    #else
     SecureBuffer<CipherType::BlockSize> block;
     for (size_t i = 0; i < num_of_blocks; ++i) {
         state_.add(1);
@@ -123,9 +142,10 @@ int CTR_DRBG<CipherType, AutoReseed, EntropySourceType>::operator()(
         cipher_.encrypt(block);
         memcpy(buffer + i * CipherType::BlockSize, block.raw(), CipherType::BlockSize);
     }
+    #endif
     if (remainder > 0) {
         state_.add(1);
-        block = state_;
+        SecureBuffer<CipherType::BlockSize> block(state_);
         cipher_.encrypt(block);
         memcpy(buffer + (size - remainder), block.raw(), remainder);
     }

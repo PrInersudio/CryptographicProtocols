@@ -88,15 +88,14 @@ add_library(Streebog OBJECT ${SOURCES_DIR}/Streebog.cpp)
 # Сборка программ.
 add_executable(lab1 ${SOURCES_DIR}/Lab1Main.cpp)
 target_link_libraries(lab1 PRIVATE Kuznechik Utils)
-target_link_options(lab1 PRIVATE)
 
 add_executable(lab2 ${SOURCES_DIR}/Lab2Main.cpp)
 target_link_libraries(lab2 PRIVATE Streebog Kuznechik Utils)
-target_link_options(lab2 PRIVATE)
+
+find_package(TBB REQUIRED)
 
 add_executable(lab3 ${SOURCES_DIR}/Lab3Main.cpp)
-target_link_libraries(lab3 PRIVATE Kuznechik)
-target_link_options(lab3 PRIVATE)
+target_link_libraries(lab3 PRIVATE Kuznechik TBB::tbb)
 
 # Сборка тестов.
 if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
@@ -163,7 +162,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
         set_tests_properties(KDF_R_13235651022Test PROPERTIES LABELS "Lab2")
 
         add_executable(CTR_DRBGTest ${TESTS_SOURCES_DIR}/CTR_DRBGTest.cpp)
-        target_link_libraries(CTR_DRBGTest PRIVATE OpenSSL::SSL OpenSSL::Crypto GTest::GTest)
+        target_link_libraries(CTR_DRBGTest PRIVATE OpenSSL::SSL OpenSSL::Crypto GTest::GTest TBB::tbb)
         add_test(NAME CTR_DRBGTest COMMAND CTR_DRBGTest)
         set_tests_properties(CTR_DRBGTest PROPERTIES LABELS "Lab3")
 
@@ -176,7 +175,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
         target_link_libraries(Lab2Test PRIVATE OpenSSL::SSL OpenSSL::Crypto Streebog Kuznechik OpenSSLKuznechikOMAC benchmark::benchmark)
 
         add_executable(Lab3Test ${TESTS_SOURCES_DIR}/Lab3Test.cpp)
-        target_link_libraries(Lab3Test PRIVATE Kuznechik benchmark::benchmark)
+        target_link_libraries(Lab3Test PRIVATE Kuznechik benchmark::benchmark TBB::tbb)
 
     endif()
 

@@ -2,7 +2,7 @@
 #include "Kuznechik.hpp"
 #include "CTR_DRBG.hpp"
 
-#define BUFFER_SIZE 8192
+#define BUFFER_SIZE 65536
 #define KEY_SIZE 32
 #define TestFilesFolder "../TestsData/"
 

@@ -39,6 +39,7 @@ static void ConstKey_MB1(benchmark::State& state) {
         ctx.update(buf);
         ctx.digest();
     }
+    state.SetBytesProcessed(state.iterations() * (1 << 20));
 }
 BENCHMARK(ConstKey_MB1);
 
@@ -53,6 +54,7 @@ static void ConstKey_MB100(benchmark::State& state) {
         ctx.update(buf);
         ctx.digest();
     }
+    state.SetBytesProcessed(state.iterations() * (1 << 20) * 100);
 }
 BENCHMARK(ConstKey_MB100);
 
@@ -67,6 +69,7 @@ static void ConstKey_MB1000(benchmark::State& state) {
         ctx.update(buf);
         ctx.digest();
     }
+    state.SetBytesProcessed(state.iterations() * (1 << 20) * 1000);
 }
 BENCHMARK(ConstKey_MB1000);
 
@@ -82,6 +85,7 @@ static void VariableKey_Blocks10(benchmark::State& state) {
             ctx.digest();
         }
     }
+    state.SetBytesProcessed(state.iterations() * 16000000);
 }
 BENCHMARK(VariableKey_Blocks10);
 
@@ -97,6 +101,7 @@ static void VariableKey_Blocks100(benchmark::State& state) {
             ctx.digest();
         }
     }
+    state.SetBytesProcessed(state.iterations() * 16000000);
 }
 BENCHMARK(VariableKey_Blocks100);
 
@@ -112,6 +117,7 @@ static void VariableKey_Blocks1000(benchmark::State& state) {
             ctx.digest();
         }
     }
+    state.SetBytesProcessed(state.iterations() * 16000000);
 }
 BENCHMARK(VariableKey_Blocks1000);
 
@@ -126,6 +132,7 @@ static void OpenSSLConstKey_MB1(benchmark::State& state) {
         ctx.update(buf);
         const std::vector<uint8_t> mac = ctx.digest();
     }
+    state.SetBytesProcessed(state.iterations() * (1 << 20));
 }
 BENCHMARK(OpenSSLConstKey_MB1);
 
@@ -140,6 +147,7 @@ static void OpenSSLConstKey_MB100(benchmark::State& state) {
         ctx.update(buf);
         const std::vector<uint8_t> mac = ctx.digest();
     }
+    state.SetBytesProcessed(state.iterations() * (1 << 20) * 100);
 }
 BENCHMARK(OpenSSLConstKey_MB100);
 
@@ -154,6 +162,7 @@ static void OpenSSLConstKey_MB1000(benchmark::State& state) {
         ctx.update(buf);
         const std::vector<uint8_t> mac = ctx.digest();
     }
+    state.SetBytesProcessed(state.iterations() * (1 << 20) * 1000);
 }
 BENCHMARK(OpenSSLConstKey_MB1000);
 
@@ -169,6 +178,7 @@ static void OpenSSLVariableKey_Blocks10(benchmark::State& state) {
             ctx.digest();
         }
     }
+    state.SetBytesProcessed(state.iterations() * 16000000);
 }
 BENCHMARK(OpenSSLVariableKey_Blocks10);
 
@@ -184,6 +194,7 @@ static void OpenSSLVariableKey_Blocks100(benchmark::State& state) {
             ctx.digest();
         }
     }
+    state.SetBytesProcessed(state.iterations() * 16000000);
 }
 BENCHMARK(OpenSSLVariableKey_Blocks100);
 
@@ -199,6 +210,7 @@ static void OpenSSLVariableKey_Blocks1000(benchmark::State& state) {
             ctx.digest();
         }
     }
+    state.SetBytesProcessed(state.iterations() * 16000000);
 }
 BENCHMARK(OpenSSLVariableKey_Blocks1000);
 
