@@ -5,7 +5,7 @@ def decon(st: str):
     res = []
     for i in range(0, len(st), 2):
         res.append("0x" + st[i:i+2])
-    res = res[::-1]
+    #res = res[::-1]
     lines = []
     for i in range(0, len(res), 8):
         chunk = res[i:i+8]

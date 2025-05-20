@@ -5,7 +5,7 @@
 #include "Cipher.hpp"
 #include "Hash.hpp"
 
-template <size_t BlockSize>
+template <size_t BlockSize, size_t KeySize>
 class OMAC : public MAC<BlockSize, BlockSize> {
 private:
     SecureBuffer<BlockSize> buf_;
@@ -13,7 +13,7 @@ private:
     SecureBuffer<BlockSize> accumulator_;
     SecureBuffer<BlockSize> key1_;
     SecureBuffer<BlockSize> key2_;
-    const Cipher<BlockSize> &ctx_;
+    const Cipher<BlockSize, KeySize> &ctx_;
 
     void finalize() noexcept;
 
@@ -23,7 +23,7 @@ private:
             buf_[i] = 0;
     }
 public:
-    OMAC(const Cipher<BlockSize> &ctx) noexcept;
+    OMAC(const Cipher<BlockSize, KeySize> &ctx) noexcept;
     void update(const uint8_t *data, const size_t size) noexcept override;
     inline void update(const std::vector<uint8_t> &data) noexcept override
         { update(data.data(), data.size()); }
@@ -50,8 +50,9 @@ static inline void transformAdditionalKey(SecureBuffer<BlockSize> &key) noexcept
     } else key <<= 1;
 }
 
-template <size_t BlockSize>
-OMAC<BlockSize>::OMAC(const Cipher<BlockSize> &ctx) noexcept : buffered_len_(0),  ctx_(ctx) {
+template <size_t BlockSize, size_t KeySize>
+OMAC<BlockSize, KeySize>::OMAC(const Cipher<BlockSize, KeySize> &ctx) noexcept
+: buffered_len_(0),  ctx_(ctx) {
     static_assert(
         BlockSize == 8 || BlockSize == 16,
         "OMAC. Использование размеров блока, отличных от 64 и 128 бит пока не предусмотренно."
@@ -61,8 +62,8 @@ OMAC<BlockSize>::OMAC(const Cipher<BlockSize> &ctx) noexcept : buffered_len_(0),
     accumulator_.zero();
 }
 
-template <size_t BlockSize>
-void OMAC<BlockSize>::update(const uint8_t *data, const size_t size) noexcept {
+template <size_t BlockSize, size_t KeySize>
+void OMAC<BlockSize, KeySize>::update(const uint8_t *data, const size_t size) noexcept {
     size_t current_index = 0;
     while (size - current_index > 0) {
         if (buffered_len_ == BlockSize) {
@@ -80,8 +81,8 @@ void OMAC<BlockSize>::update(const uint8_t *data, const size_t size) noexcept {
     }
 }
 
-template <size_t BlockSize>
-void OMAC<BlockSize>::finalize() noexcept {
+template <size_t BlockSize, size_t KeySize>
+void OMAC<BlockSize, KeySize>::finalize() noexcept {
     const SecureBuffer<BlockSize> *final_key;
     if (buffered_len_ == BlockSize)
         final_key = &key1_;
@@ -92,31 +93,31 @@ void OMAC<BlockSize>::finalize() noexcept {
     ctx_.encrypt((accumulator_ += buf_) += *final_key);
 }
 
-template <size_t BlockSize>
-std::vector<uint8_t> OMAC<BlockSize>::digest(const size_t size) {
+template <size_t BlockSize, size_t KeySize>
+std::vector<uint8_t> OMAC<BlockSize, KeySize>::digest(const size_t size) {
     if (size > BlockSize)
         throw std::invalid_argument("Запрошен размер MAC больше длины блока выбранного шифра.");
     finalize();
     return std::vector<uint8_t>(accumulator_.begin(), accumulator_.begin() + size);
 }
 
-template <size_t BlockSize>
-void OMAC<BlockSize>::digest(uint8_t *digest_buffer) noexcept {
+template <size_t BlockSize, size_t KeySize>
+void OMAC<BlockSize, KeySize>::digest(uint8_t *digest_buffer) noexcept {
     finalize();
     std::copy(accumulator_.begin(), accumulator_.end(), digest_buffer);
 }
 
 #ifdef UNIT_TESTS
-template <size_t BlockSize>
-const SecureBuffer<BlockSize> &OMAC<BlockSize>::getAccumulator() const noexcept {
+template <size_t BlockSize, size_t KeySize>
+const SecureBuffer<BlockSize> &OMAC<BlockSize, KeySize>::getAccumulator() const noexcept {
     return accumulator_;
 }
-template <size_t BlockSize>
-const SecureBuffer<BlockSize> &OMAC<BlockSize>::getKey1() const noexcept {
+template <size_t BlockSize, size_t KeySize>
+const SecureBuffer<BlockSize> &OMAC<BlockSize, KeySize>::getKey1() const noexcept {
     return key1_;
 }
-template <size_t BlockSize>
-const SecureBuffer<BlockSize> &OMAC<BlockSize>::getKey2() const noexcept {
+template <size_t BlockSize, size_t KeySize>
+const SecureBuffer<BlockSize> &OMAC<BlockSize, KeySize>::getKey2() const noexcept {
     return key2_;
 }
 #endif

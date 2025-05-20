@@ -55,6 +55,9 @@ private:
 
 class Streebog256 : public Hash<64, 32>, public Streebog {
 public:
+    static constexpr size_t BlockSize = 64;
+    static constexpr size_t DigestSize = 32;
+
     Streebog256() : Streebog(Variant::Streebog256) {}
     inline void update(const uint8_t *data, const size_t size) override
         { Streebog::update(data, size); }
@@ -74,6 +77,9 @@ public:
 
 class Streebog512 : public Hash<64, 64>, public Streebog {
 public:
+    static constexpr size_t BlockSize = 64;
+    static constexpr size_t DigestSize = 64;
+
     Streebog512() noexcept : Streebog(Variant::Streebog512) {}
     inline void update(const uint8_t *data, const size_t size) override
         { Streebog::update(data, size); }

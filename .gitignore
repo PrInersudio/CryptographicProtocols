@@ -1,6 +1,6 @@
 Build/*
 !Build/.gitkeep
 Документы/*.docx
-Lab1TestsData/*
-!Lab1TestsData/.gitkeep
+TestsData/*
+!TestsData/.gitkeep
 *sage.py

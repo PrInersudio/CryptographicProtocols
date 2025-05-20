@@ -141,7 +141,7 @@ void KDF_R_13235651022<
     }
     else {
         cipher_ = std::make_unique<Kuznechik>(inner_key);
-        second_stage_macer_ = std::make_unique<OMAC<16>>(*cipher_);
+        second_stage_macer_ = std::make_unique<OMAC<16, 32>>(*cipher_);
     }
 }
 

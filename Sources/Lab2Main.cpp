@@ -132,7 +132,7 @@ static int getParams(Params &params, int argc, char **argv) noexcept {
                 else {
                     std::cerr << "Ошибка: неизвестный вариант первого этапа." << std::endl;
                     printHelp(argv[0]);
-                    return 1;
+                    return -1;
                 }
                 break;
             }
@@ -149,7 +149,7 @@ static int getParams(Params &params, int argc, char **argv) noexcept {
                 else {
                     std::cerr << "Ошибка: неизвестный вариант второго этапа." << std::endl;
                     printHelp(argv[0]);
-                    return 1;
+                    return -1;
                 }
                 break;
             }
@@ -165,34 +165,35 @@ static int getParams(Params &params, int argc, char **argv) noexcept {
             }
             case 'h': {
                 printHelp(argv[0]);
-                return 1;
+                return -2;
             }
             default: {
+                std::cerr << "Ошибка: некорректный аргумент." << std::endl;
                 printHelp(argv[0]);
-                return 1;
+                return -3;
             }
         }
     if (params.key_file.empty()) {
         std::cerr << "Ошибка: не указан файл с ключом (-k)." << std::endl;
         printHelp(argv[0]);
-        return 1;
+        return -4;
     }
     if (params.text_file.empty()) {
         std::cerr << "Ошибка: не указан файл с данными (-i)." << std::endl;
         printHelp(argv[0]);
-        return 1;
+        return -5;
     }
     if (params.out_file.empty() && params.mac_file.empty()) {
         std::cerr << "Ошибка: необходимо указать -o (файл MAC) или -m (MAC для проверки)." << std::endl;
         printHelp(argv[0]);
-        return 1;
+        return -6;
     }
     if (!params.out_file.empty() && !params.mac_file.empty()) {
         std::cerr
             << "Ошибка: нельзя указать параметры -o (файл MAC) и -m (MAC для проверки) одновременно."
             << std::endl;
         printHelp(argv[0]);
-        return 1;
+        return -7;
     }
     return 0;
 }

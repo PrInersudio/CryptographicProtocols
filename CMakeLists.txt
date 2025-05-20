@@ -7,7 +7,7 @@ message(STATUS "Сборка в режиме ${CMAKE_BUILD_TYPE}")
 # Отмечаем местонахождение исходных файлов.
 set(SOURCES_DIR ${CMAKE_SOURCE_DIR}/Sources)
 set(TESTS_SOURCES_DIR ${CMAKE_SOURCE_DIR}/TestsSources)
-set(LAB1_TESTS_DATA_DIR ${CMAKE_SOURCE_DIR}/Lab1TestsData)
+set(LAB1_TESTS_DATA_DIR ${CMAKE_SOURCE_DIR}/TestsData)
 include_directories(${SOURCES_DIR})
 
 # Флаги
@@ -62,7 +62,7 @@ set (GOST_SAFETY_FLAGS
     -fstack-protector
 )
 add_compile_options(${GOST_SAFETY_FLAGS})
-add_compile_options(-O3)
+add_compile_options(-O3 -fconcepts-diagnostics-depth=2)
 add_compile_options(
     $<$<OR:$<CONFIG:Debug>,$<CONFIG:UnitTests>>:-DUNIT_TESTS>
     $<$<CONFIG:Debug>:-fsanitize=address>
@@ -93,6 +93,10 @@ target_link_options(lab1 PRIVATE)
 add_executable(lab2 ${SOURCES_DIR}/Lab2Main.cpp)
 target_link_libraries(lab2 PRIVATE Streebog Kuznechik Utils)
 target_link_options(lab2 PRIVATE)
+
+add_executable(lab3 ${SOURCES_DIR}/Lab3Main.cpp)
+target_link_libraries(lab3 PRIVATE Kuznechik)
+target_link_options(lab3 PRIVATE)
 
 # Сборка тестов.
 if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
@@ -158,6 +162,11 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
         add_test(NAME KDF_R_13235651022Test COMMAND KDF_R_13235651022Test)
         set_tests_properties(KDF_R_13235651022Test PROPERTIES LABELS "Lab2")
 
+        add_executable(CTR_DRBGTest ${TESTS_SOURCES_DIR}/CTR_DRBGTest.cpp)
+        target_link_libraries(CTR_DRBGTest PRIVATE OpenSSL::SSL OpenSSL::Crypto GTest::GTest)
+        add_test(NAME CTR_DRBGTest COMMAND CTR_DRBGTest)
+        set_tests_properties(CTR_DRBGTest PROPERTIES LABELS "Lab3")
+
         find_package(benchmark REQUIRED)
 
         add_executable(Lab1Test ${TESTS_SOURCES_DIR}/Lab1Test.cpp)
@@ -165,6 +174,9 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
 
         add_executable(Lab2Test ${TESTS_SOURCES_DIR}/Lab2Test.cpp)
         target_link_libraries(Lab2Test PRIVATE OpenSSL::SSL OpenSSL::Crypto Streebog Kuznechik OpenSSLKuznechikOMAC benchmark::benchmark)
+
+        add_executable(Lab3Test ${TESTS_SOURCES_DIR}/Lab3Test.cpp)
+        target_link_libraries(Lab3Test PRIVATE Kuznechik benchmark::benchmark)
 
     endif()
 

@@ -15,6 +15,13 @@ public:
     virtual ~Hash() = default;
 };
 
+template <typename T>
+concept IsHash = requires {
+    { T::BlockSize } -> std::same_as<const size_t &>;
+    { T::DigestSize } -> std::same_as<const size_t &>;
+    requires std::is_base_of_v<Hash<T::BlockSize, T::DigestSize>, T>;
+};
+
 template <size_t BlockSize, size_t DigestSize>
 class MAC : public Hash<BlockSize, DigestSize> {};
 

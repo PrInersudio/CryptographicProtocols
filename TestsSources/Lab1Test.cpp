@@ -6,7 +6,7 @@
 #include "OMAC.hpp"
 #include "OpenSSLKuznechikOMAC.hpp"
 
-#define TestFilesFolder "../Lab1TestsData/"
+#define TestFilesFolder "../TestsData/"
 
 namespace RandKeyGenerator {
     // Не криптостойкий ГСЧ используется только в рамках тестирования.
