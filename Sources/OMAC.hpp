@@ -6,7 +6,7 @@
 #include "Hash.hpp"
 
 template <IsCipher CipherType>
-class OMAC : public MAC<CipherType::BlockSize, CipherType::BlockSize> {
+class OMAC : public MAC<CipherType::BlockSize, CipherType::BlockSize, CipherType::KeySize> {
 private:
     SecureBuffer<CipherType::BlockSize> buf_;
     size_t buffered_len_;

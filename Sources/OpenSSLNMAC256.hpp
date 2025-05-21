@@ -6,13 +6,16 @@
 #include "OpenSSLHash.hpp"
 
 template <size_t KeySize>
-class OpenSSLNMAC256 : public MAC<64, 32> {
+class OpenSSLNMAC256 : public MAC<64, 32, KeySize> {
 private:
     OpenSSLHash<64,64> inner_hasher_;
     OpenSSLHash<64,32> outer_hasher_;
     SecureBuffer<64> padded_key_;
 public:
-    OpenSSLNMAC256(const SecureBuffer<KeySize> &key);
+    OpenSSLNMAC256() : inner_hasher_(SN_id_GostR3411_2012_512), outer_hasher_(SN_id_GostR3411_2012_256) {}
+    void initKeySchedule(const SecureBuffer<KeySize> &key) override;
+    OpenSSLNMAC256(const SecureBuffer<KeySize> &key) : OpenSSLNMAC256()
+        { initKeySchedule(key); }
     inline void update(const uint8_t *data, const size_t size) noexcept override
         { inner_hasher_.update(data, size); }
     inline void update(const std::vector<uint8_t> &data) noexcept override
@@ -23,9 +26,7 @@ public:
 };
 
 template <size_t KeySize>
-OpenSSLNMAC256<KeySize>::OpenSSLNMAC256(const SecureBuffer<KeySize> &key)
-: inner_hasher_(SN_id_GostR3411_2012_512), outer_hasher_(SN_id_GostR3411_2012_256)
-{
+void OpenSSLNMAC256<KeySize>::initKeySchedule(const SecureBuffer<KeySize> &key) {
     padded_key_.zero();
     if constexpr (KeySize > 64) {
         inner_hasher_.update(key.raw(), KeySize);

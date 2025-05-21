@@ -6,12 +6,15 @@
 #include "Streebog.hpp"
 
 template <size_t KeySize>
-class NMAC256 : public MAC<64, 32> {
+class NMAC256 : public MAC<64, 32, KeySize> {
 private:
     Streebog512 inner_hasher_;
     SecureBuffer<64> padded_key_;
 public:
-    NMAC256(const SecureBuffer<KeySize> &key) noexcept;
+    NMAC256() = default;
+    void initKeySchedule(const SecureBuffer<KeySize> &key) noexcept override;
+    inline NMAC256(const SecureBuffer<KeySize> &key) noexcept
+        { initKeySchedule(key); }
     inline void update(const uint8_t *data, const size_t size) noexcept override
         { inner_hasher_.update(data, size); }
     inline void update(const std::vector<uint8_t> &data) noexcept override
@@ -22,7 +25,7 @@ public:
 };
 
 template <size_t KeySize>
-NMAC256<KeySize>::NMAC256(const SecureBuffer<KeySize> &key) noexcept {
+void NMAC256<KeySize>::initKeySchedule(const SecureBuffer<KeySize> &key) noexcept {
     padded_key_.zero();
     if constexpr (KeySize > 64) {
         inner_hasher_.update(key.raw(), KeySize);

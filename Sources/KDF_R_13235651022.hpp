@@ -48,7 +48,7 @@ class KDF_R_13235651022 {
 private:
     static constexpr size_t SecondStageMACBlockSize = SecondStageMACParams<SecondStageVariant>::BlockSize;
     static constexpr size_t SecondStageMACDigestSize = SecondStageMACParams<SecondStageVariant>::DigestSize;
-    std::unique_ptr<MAC<SecondStageMACBlockSize, SecondStageMACDigestSize>> second_stage_macer_;
+    std::unique_ptr<MAC<SecondStageMACBlockSize, SecondStageMACDigestSize, 32>> second_stage_macer_;
 
     static void firstStage(
         SecureBuffer<32> &inner_key,

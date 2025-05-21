@@ -5,12 +5,15 @@
 #include "SecureBuffer.hpp"
 
 template <IsHash HashType, size_t KeySize>
-class HMAC : public MAC<HashType::BlockSize, HashType::DigestSize> {
+class HMAC : public MAC<HashType::BlockSize, HashType::DigestSize, KeySize> {
 private:
     HashType hash_;
     SecureBuffer<HashType::BlockSize> padded_key_;
 public:
-    HMAC(const SecureBuffer<KeySize> &key) noexcept;
+    HMAC() = default;
+    void initKeySchedule(const SecureBuffer<KeySize> &key) noexcept override;
+    inline HMAC(const SecureBuffer<KeySize> &key) noexcept
+        { initKeySchedule(key); }
     inline void update(const uint8_t *data, const size_t size) noexcept override
         { hash_.update(data, size); }
     inline void update(const std::vector<uint8_t> &data) noexcept override
@@ -21,7 +24,7 @@ public:
 };
 
 template <IsHash HashType, size_t KeySize>
-HMAC<HashType, KeySize>::HMAC(const SecureBuffer<KeySize> &key) noexcept {
+void HMAC<HashType, KeySize>::initKeySchedule(const SecureBuffer<KeySize> &key) noexcept {
     static_assert(HashType::DigestSize <= HashType::BlockSize,
         "Размер подписи базового хэша не может быть больше его размера блока.");
     padded_key_.zero();

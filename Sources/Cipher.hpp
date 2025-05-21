@@ -14,11 +14,12 @@ public:
 
 template <typename T>
 concept IsCipher = requires(const SecureBuffer<T::KeySize> &key) {
+    { T() };
+    { T(key) };
     { T::BlockSize } -> std::same_as<const size_t &>;
     { T::KeySize } -> std::same_as<const size_t &>;
     requires std::is_base_of_v<Cipher<T::BlockSize, T::KeySize>, T>;
-    { T(key) };
-    { T() };
+    
 };
 
 #endif

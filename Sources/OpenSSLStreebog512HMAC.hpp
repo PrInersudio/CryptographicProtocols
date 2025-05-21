@@ -7,13 +7,12 @@
 #include "SecureBuffer.hpp"
 
 template <size_t KeySize>
-class OpenSSLStreebog512HMAC : public MAC<64, 64> {
+class OpenSSLStreebog512HMAC : public MAC<64, 64, KeySize> {
 private:
     EVP_MAC_CTX *ctx_;
     EVP_MAC* mac_;
     SecureBuffer<KeySize> key_;
 
-    void init();
     inline void free() noexcept { 
         if (ctx_) EVP_MAC_CTX_free(ctx_);
         if (mac_) EVP_MAC_free(mac_);
@@ -21,18 +20,22 @@ private:
         mac_ = nullptr;
     }
 public:
-    OpenSSLStreebog512HMAC(const SecureBuffer<KeySize> &key);
+    OpenSSLStreebog512HMAC() : ctx_(nullptr), mac_(nullptr) {}
+    void initKeySchedule(const SecureBuffer<KeySize> &key) override;
+    inline OpenSSLStreebog512HMAC(const SecureBuffer<KeySize> &key)
+        { initKeySchedule(key); }
     void update(const uint8_t *data, const size_t size);
     inline void update(const std::vector<uint8_t> &data)
         { update(data.data(), data.size()); }
     std::vector<uint8_t> digest();
     void digest(uint8_t *digest_buffer);
-    inline void clear() override { free(); init(); }
-    ~OpenSSLStreebog512HMAC() noexcept;
+    inline void clear() override { free(); initKeySchedule(key_); }
+    inline ~OpenSSLStreebog512HMAC() noexcept { free(); }
 };
 
 template <size_t KeySize>
-void OpenSSLStreebog512HMAC<KeySize>::init() {
+void OpenSSLStreebog512HMAC<KeySize>::initKeySchedule(const SecureBuffer<KeySize> &key) {
+    key_ = key;
     mac_ = EVP_MAC_fetch(nullptr, "HMAC", nullptr);
     if (!mac_) throw std::runtime_error("Не удалось получить MAC HMAC.");
     ctx_ = EVP_MAC_CTX_new(mac_);
@@ -50,16 +53,6 @@ void OpenSSLStreebog512HMAC<KeySize>::init() {
         EVP_MAC_free(mac_);
         throw std::runtime_error("Ошибка инициализации HMAC.");
     }
-}
-
-template <size_t KeySize>
-OpenSSLStreebog512HMAC<KeySize>::OpenSSLStreebog512HMAC(const SecureBuffer<KeySize> &key) : key_(key) {
-    init();
-}
-
-template <size_t KeySize>
-OpenSSLStreebog512HMAC<KeySize>::~OpenSSLStreebog512HMAC() noexcept {
-    free();
 }
 
 template <size_t KeySize>

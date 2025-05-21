@@ -1,6 +1,7 @@
 #include "OpenSSLKuznechikOMAC.hpp"
 
-void OpenSSLKuznechikOMAC::init() {
+void OpenSSLKuznechikOMAC::initKeySchedule(const SecureBuffer<32> &key) {
+    key_ = key;
     mac_ = EVP_MAC_fetch(nullptr, "CMAC", nullptr);
     if (!mac_) throw std::runtime_error("Не удалось получить MAC CMAC.");
     ctx_ = EVP_MAC_CTX_new(mac_);
@@ -18,14 +19,6 @@ void OpenSSLKuznechikOMAC::init() {
         EVP_MAC_free(mac_);
         throw std::runtime_error("Ошибка инициализации CMAC.");
     }
-}
-
-OpenSSLKuznechikOMAC::OpenSSLKuznechikOMAC(const SecureBuffer<32> &key) : key_(key) {
-    init();
-}
-
-OpenSSLKuznechikOMAC::~OpenSSLKuznechikOMAC() noexcept {
-    free();
 }
 
 void OpenSSLKuznechikOMAC::update(const uint8_t *data, const size_t size) {
