@@ -40,7 +40,7 @@ TEST(HMACTest, TestHMACStreebog256SmallKey) {
         0xd0, 0xaf, 0x6d, 0x7c, 0xd4, 0x92, 0x2e, 0xd9
     };
     Streebog256 hasher;
-    HMAC HMACStreebog256(hasher, key);
+    HMAC<Streebog256, 32> HMACStreebog256(key);
     HMACStreebog256.update(text);
     std::vector<uint8_t> mac = HMACStreebog256.digest();
     EXPECT_TRUE(mac == expected_mac)
@@ -70,7 +70,7 @@ TEST(HMACTest, TestHMACStreebog512SmallKey) {
         0x00, 0x0f, 0xfc, 0x03, 0x66, 0xc2, 0x51, 0xe6
     };
     Streebog512 hasher;
-    HMAC HMACStreebog512(hasher, key);
+    HMAC<Streebog512, 32> HMACStreebog512(key);
     HMACStreebog512.update(text);
     std::vector<uint8_t> mac = HMACStreebog512.digest();
     EXPECT_TRUE(mac == expected_mac)
@@ -108,7 +108,7 @@ TEST(HMACTest, TestHMACStreebog256BigKey) {
         0x98, 0x9C, 0x86, 0xC8, 0xC2, 0x09, 0x97, 0x56
     };
     Streebog256 hasher;
-    HMAC HMACStreebog256(hasher, key);
+    HMAC<Streebog256, 128> HMACStreebog256(key);
     HMACStreebog256.update(text);
     std::vector<uint8_t> mac = HMACStreebog256.digest();
     EXPECT_TRUE(mac == expected_mac)
@@ -150,7 +150,7 @@ TEST(HMACTest, TestHMACStreebog512BigKey) {
         0xF7, 0x10, 0x9B, 0x6A, 0x7D, 0xC5, 0x3A, 0x8A
     };
     Streebog512 hasher;
-    HMAC HMACStreebog512(hasher, key);
+    HMAC<Streebog512, 128> HMACStreebog512(key);
     HMACStreebog512.update(text);
     std::vector<uint8_t> mac = HMACStreebog512.digest();
     EXPECT_TRUE(mac == expected_mac)
@@ -180,7 +180,7 @@ TEST(HMACTest, TestHMACClear) {
         0x00, 0x0f, 0xfc, 0x03, 0x66, 0xc2, 0x51, 0xe6
     };
     Streebog512 hasher;
-    HMAC HMACStreebog512(hasher, key);
+    HMAC<Streebog512, 32> HMACStreebog512(key);
     for (uint8_t i = 0; i < 2; ++i) {
         HMACStreebog512.update(text);
         std::vector<uint8_t> mac = HMACStreebog512.digest();
@@ -213,7 +213,7 @@ TEST(HMACTest, TestHMACRaw) {
         0x00, 0x0f, 0xfc, 0x03, 0x66, 0xc2, 0x51, 0xe6
     };
     Streebog512 hasher;
-    HMAC HMACStreebog512(hasher, key);
+    HMAC<Streebog512, 32> HMACStreebog512(key);
     HMACStreebog512.update(text, 16);
     std::vector<uint8_t> mac(64);
     HMACStreebog512.digest(mac.data());

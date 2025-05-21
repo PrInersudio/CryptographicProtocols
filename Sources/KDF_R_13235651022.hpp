@@ -48,8 +48,6 @@ class KDF_R_13235651022 {
 private:
     static constexpr size_t SecondStageMACBlockSize = SecondStageMACParams<SecondStageVariant>::BlockSize;
     static constexpr size_t SecondStageMACDigestSize = SecondStageMACParams<SecondStageVariant>::DigestSize;
-    std::unique_ptr<Streebog256> hasher256_;
-    std::unique_ptr<Streebog512> hasher512_;
     std::unique_ptr<MAC<SecondStageMACBlockSize, SecondStageMACDigestSize>> second_stage_macer_;
 
     static void firstStage(
@@ -101,8 +99,7 @@ MasterKeySize, SaltSize
         macer.digest(inner_key.raw());
     }
     else if constexpr (FirstStageVariant == FirstStageVariants::HMAC) {
-        Streebog512 hasher;
-        HMAC<64, 64, SaltSize> macer(hasher, salt);
+        HMAC<Streebog512, SaltSize> macer(salt);
         macer.update(master_key.raw(), MasterKeySize);
         SecureBuffer<64> big_inner_key;
         macer.digest(big_inner_key.raw());
@@ -130,14 +127,10 @@ void KDF_R_13235651022<
 >::initSecondStageMacer(SecureBuffer<32> &inner_key) noexcept {
     if constexpr (SecondStageVariant == SecondStageVariants::NMAC)
         second_stage_macer_ = std::make_unique<NMAC256<32>>(inner_key);
-    else if constexpr (SecondStageVariant == SecondStageVariants::HMAC256) {
-        hasher256_ = std::make_unique<Streebog256>();
-        second_stage_macer_ = std::make_unique<HMAC<64, 32, 32>>(*hasher256_, inner_key);
-    }
-    else if constexpr (SecondStageVariant == SecondStageVariants::HMAC512) {
-        hasher512_ = std::make_unique<Streebog512>();
-        second_stage_macer_ = std::make_unique<HMAC<64, 64, 32>>(*hasher512_, inner_key);
-    }
+    else if constexpr (SecondStageVariant == SecondStageVariants::HMAC256)
+        second_stage_macer_ = std::make_unique<HMAC<Streebog256, 32>>(inner_key);
+    else if constexpr (SecondStageVariant == SecondStageVariants::HMAC512)
+        second_stage_macer_ = std::make_unique<HMAC<Streebog512, 32>>(inner_key);
     else
         second_stage_macer_ = std::make_unique<OMAC<Kuznechik>>(inner_key);
 }
