@@ -36,7 +36,7 @@ void checkTimestamp(const uint64_t timestamp_raw) noexcept {
             << std::endl;
 }
 
-void initKuznechikCTX(Kuznechik &ctx, const char *filename) {
+void initOMACKuznechikCTX(OMAC<Kuznechik> &ctx, const char *filename) {
     uint64_t timestamp;
     SecureBuffer<32> key;
     std::ifstream file(filename, std::ios::binary);

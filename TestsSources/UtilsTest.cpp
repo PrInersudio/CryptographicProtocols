@@ -50,8 +50,8 @@ TEST(InitKuznechikCTXTest, FileReadSuccess) {
     };
     file.write(reinterpret_cast<char*>(key.raw()), 32);
     file.close();
-    Kuznechik ctx;
-    EXPECT_NO_THROW(initKuznechikCTX(ctx, "test_key.bin"));
+    OMAC<Kuznechik> ctx;
+    EXPECT_NO_THROW(initOMACKuznechikCTX(ctx, "test_key.bin"));
     static const SecureBuffer<16> round_keys[] = {
         { 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77 },
         { 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef },
@@ -64,15 +64,15 @@ TEST(InitKuznechikCTXTest, FileReadSuccess) {
         { 0xbb, 0x44, 0xe2, 0x53, 0x78, 0xc7, 0x31, 0x23, 0xa5, 0xf3, 0x2f, 0x73, 0xcd, 0xb6, 0xe5, 0x17 },
         { 0x72, 0xe9, 0xdd, 0x74, 0x16, 0xbc, 0xf4, 0x5b, 0x75, 0x5d, 0xba, 0xa8, 0x8e, 0x4a, 0x40, 0x43 }
     };
-    const SecureBuffer<16> *result_round_keys = ctx.getKeySchedule();
+    const SecureBuffer<16> *result_round_keys = ctx.getCipherCTX().getKeySchedule();
     for (uint8_t i = 0; i < 10; ++i)
         EXPECT_EQ(round_keys[i], result_round_keys[i]) << "Не совпал ключ " << i;
     remove("test_key.bin");
 }
 
 TEST(InitKuznechikCTXTest, FileReadFailure) {
-    Kuznechik ctx;
-    EXPECT_THROW(initKuznechikCTX(ctx, "non_existent_file.bin"), std::runtime_error);
+    OMAC<Kuznechik> ctx;
+    EXPECT_THROW(initOMACKuznechikCTX(ctx, "non_existent_file.bin"), std::runtime_error);
 }
 
 TEST(InitKuznechikCTXTest, FileHasNotEnouthForTimestamp) {
@@ -80,8 +80,8 @@ TEST(InitKuznechikCTXTest, FileHasNotEnouthForTimestamp) {
     static constexpr char test_fill[] = {0x0, 0x1, 0x2, 0x3};
     file.write(test_fill, 4);
     file.close();
-    Kuznechik ctx;
-    EXPECT_THROW(initKuznechikCTX(ctx, "test_key.bin"), std::runtime_error);
+    OMAC<Kuznechik> ctx;
+    EXPECT_THROW(initOMACKuznechikCTX(ctx, "test_key.bin"), std::runtime_error);
     remove("test_key.bin");
 }
 
@@ -90,8 +90,8 @@ TEST(InitKuznechikCTXTest, FileHasNotEnouthForKey) {
     static constexpr char test_fill[] = {0x0, 0x1, 0x2, 0x3, 0x0, 0x1, 0x2, 0x3, 0x0, 0x1, 0x2, 0x3};
     file.write(test_fill, 4);
     file.close();
-    Kuznechik ctx;
-    EXPECT_THROW(initKuznechikCTX(ctx, "test_key.bin"), std::runtime_error);
+    OMAC<Kuznechik> ctx;
+    EXPECT_THROW(initOMACKuznechikCTX(ctx, "test_key.bin"), std::runtime_error);
     remove("test_key.bin");
 }
 

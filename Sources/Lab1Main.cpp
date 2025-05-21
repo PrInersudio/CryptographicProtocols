@@ -10,11 +10,10 @@ int main(int argc, char **argv) {
     }
     try {
         const std::vector<uint8_t> expected_mac = (argc < 4) ? std::vector<uint8_t>{} : parseHexString(argv[3]); 
-        Kuznechik cipher;
-        initKuznechikCTX(cipher, argv[1]);
+        OMAC<Kuznechik> ctx;
+        initOMACKuznechikCTX(ctx, argv[1]);
         std::ifstream file(argv[2], std::ios::binary);
         if (!file) throw std::runtime_error("Не удалось открыть файл с текстом.");
-        OMAC ctx(cipher);
         std::vector<uint8_t> buf;
         while (fillBuffer(file, buf))
             ctx.update(buf);

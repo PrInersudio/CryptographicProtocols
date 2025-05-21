@@ -4,7 +4,7 @@
 #include "Kuznechik.hpp"
 #include "CTR_DRBG.hpp"
 
-#define BUFFER_SIZE 8192
+#define BUFFER_SIZE 65536
 #define BAR_WIDTH 50
 
 struct Params {

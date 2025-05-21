@@ -5,29 +5,24 @@
 #include "Kuznechik.hpp"
 #include "OMAC.hpp"
 
-static const Kuznechik сipher({
+static const SecureBuffer key = {
     0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
     0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef
-});
+};
 
-TEST(OMACTest, TestKeysInit) {
-    OMAC ctx(сipher);
-    static const SecureBuffer expected_key1 = {
+TEST(OMACTest, TestDigestKeyInit) {
+    OMAC<Kuznechik> ctx(key);
+    static const SecureBuffer expected_key = {
         0x29, 0x7d, 0x82, 0xbc, 0x4d, 0x39, 0xe3, 0xca,
         0x0d, 0xe0, 0x57, 0x32, 0x98, 0x15, 0x1d, 0xc7
     };
-    static const SecureBuffer expected_key2 = {
-        0x52, 0xfb, 0x05, 0x78, 0x9a, 0x73, 0xc7, 0x94,
-        0x1b, 0xc0, 0xae, 0x65, 0x30, 0x2a, 0x3b, 0x8e 
-    };
-    EXPECT_EQ(ctx.getKey1(), expected_key1);
-    EXPECT_EQ(ctx.getKey2(), expected_key2);
+    EXPECT_EQ(ctx.getDigestKey(), expected_key);
 }
 
 TEST(OMACTest, TestFullBlocks) {
-    OMAC ctx(сipher);
+    OMAC<Kuznechik> ctx(key);
     static const std::vector<uint8_t> plain_text[] = {
         std::vector<uint8_t>{
             0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x00,
@@ -78,7 +73,7 @@ TEST(OMACTest, TestFullBlocks) {
 }
 
 TEST(OMACTest, TestBufferDigest) {
-    OMAC ctx(сipher);
+    OMAC<Kuznechik> ctx(key);
     static const std::vector<uint8_t> plain_text = {
             0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x00,
             0xff, 0xee, 0xdd, 0xcc, 0xbb, 0xaa, 0x99, 0x88,
@@ -100,7 +95,7 @@ TEST(OMACTest, TestBufferDigest) {
 }
 
 TEST(OMACTest, TestPartial) {
-    OMAC ctx(сipher);
+    OMAC<Kuznechik> ctx(key);
     static const std::vector<uint8_t> plain_text[] = {
         std::vector<uint8_t>{0x11},
         std::vector<uint8_t>{0x22, 0x33},
@@ -153,7 +148,7 @@ TEST(OMACTest, TestPartial) {
 }
 
 TEST(OMACTest, TestZeroUpdate) {
-    OMAC ctx(сipher);
+    OMAC<Kuznechik> ctx(key);
     static const std::vector<uint8_t> plain_text[] = {
         std::vector<uint8_t>{
             0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x00,
@@ -206,7 +201,7 @@ TEST(OMACTest, TestZeroUpdate) {
 }
 
 TEST(OMACTest, TestDigestThrow) {
-    OMAC ctx(сipher);
+    OMAC<Kuznechik> ctx(key);
     EXPECT_THROW(ctx.digest(17), std::invalid_argument);
 }
 
@@ -222,7 +217,7 @@ TEST(OMACTest, TestClear) {
             0xaa, 0xbb, 0xcc, 0xee, 0xff, 0x0a, 0x00, 0x11
     };
     static const std::vector<uint8_t> expected_mac{0x33, 0x6f, 0x4d, 0x29, 0x60, 0x59, 0xfb, 0xe3};
-    OMAC ctx(сipher);
+    OMAC<Kuznechik> ctx(key);
     ctx.update(plain_text);
     const std::vector<uint8_t> mac1 = ctx.digest(8);
     EXPECT_EQ(mac1, expected_mac);

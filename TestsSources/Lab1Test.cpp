@@ -26,13 +26,12 @@ static const SecureBuffer key = {
     0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10,
     0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef
 };
-static const Kuznechik cipher(key);
 
 static void ConstKey_MB1(benchmark::State& state) {
     for (auto _ : state) {
         std::ifstream file(TestFilesFolder "1MB.bin", std::ios::binary);
         if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "1MB.bin.");
-        OMAC ctx(cipher);
+        OMAC<Kuznechik> ctx;
         std::vector<uint8_t> buf;
         while (fillBuffer(file, buf))
             ctx.update(buf);
@@ -47,7 +46,7 @@ static void ConstKey_MB100(benchmark::State& state) {
     for (auto _ : state) {
         std::ifstream file(TestFilesFolder "100MB.bin", std::ios::binary);
         if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "100MB.bin.");
-        OMAC ctx(cipher);
+        OMAC<Kuznechik> ctx;
         std::vector<uint8_t> buf;
         while (fillBuffer(file, buf))
             ctx.update(buf);
@@ -62,7 +61,7 @@ static void ConstKey_MB1000(benchmark::State& state) {
     for (auto _ : state) {
         std::ifstream file(TestFilesFolder "1000MB.bin", std::ios::binary);
         if (!file) throw std::runtime_error("Не удалось открыть" TestFilesFolder "1000MB.bin.");
-        OMAC ctx(cipher);
+        OMAC<Kuznechik> ctx;
         std::vector<uint8_t> buf;
         while (fillBuffer(file, buf))
             ctx.update(buf);
@@ -79,7 +78,7 @@ static void VariableKey_Blocks10(benchmark::State& state) {
         if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "1MBlocks.bin.");
         std::vector<uint8_t> buf(160);
         for (uint32_t i = 0; i < 100000; ++i) {
-            OMAC ctx(Kuznechik(RandKeyGenerator::genRandKey()));
+            OMAC<Kuznechik> ctx(RandKeyGenerator::genRandKey());
             file.read(reinterpret_cast<char *>(buf.data()), 160);
             ctx.update(buf);
             ctx.digest();
@@ -95,7 +94,7 @@ static void VariableKey_Blocks100(benchmark::State& state) {
         if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "1MBlocks.bin.");
         std::vector<uint8_t> buf(1600);
         for (uint32_t i = 0; i < 10000; ++i) {
-            OMAC ctx(Kuznechik(RandKeyGenerator::genRandKey()));
+            OMAC<Kuznechik> ctx(RandKeyGenerator::genRandKey());
             file.read(reinterpret_cast<char *>(buf.data()), 1600);
             ctx.update(buf);
             ctx.digest();
@@ -111,7 +110,7 @@ static void VariableKey_Blocks1000(benchmark::State& state) {
         if (!file) throw std::runtime_error("Не удалось открыть " TestFilesFolder "1MBlocks.bin.");
         std::vector<uint8_t> buf(16000);
         for (uint32_t i = 0; i < 1000; ++i) {
-            OMAC ctx(Kuznechik(RandKeyGenerator::genRandKey()));
+            OMAC<Kuznechik> ctx(RandKeyGenerator::genRandKey());
             file.read(reinterpret_cast<char *>(buf.data()), 16000);
             ctx.update(buf);
             ctx.digest();

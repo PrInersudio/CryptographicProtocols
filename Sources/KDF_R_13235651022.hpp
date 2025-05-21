@@ -48,7 +48,6 @@ class KDF_R_13235651022 {
 private:
     static constexpr size_t SecondStageMACBlockSize = SecondStageMACParams<SecondStageVariant>::BlockSize;
     static constexpr size_t SecondStageMACDigestSize = SecondStageMACParams<SecondStageVariant>::DigestSize;
-    std::unique_ptr<Kuznechik> cipher_;
     std::unique_ptr<Streebog256> hasher256_;
     std::unique_ptr<Streebog512> hasher512_;
     std::unique_ptr<MAC<SecondStageMACBlockSize, SecondStageMACDigestSize>> second_stage_macer_;
@@ -139,10 +138,8 @@ void KDF_R_13235651022<
         hasher512_ = std::make_unique<Streebog512>();
         second_stage_macer_ = std::make_unique<HMAC<64, 64, 32>>(*hasher512_, inner_key);
     }
-    else {
-        cipher_ = std::make_unique<Kuznechik>(inner_key);
-        second_stage_macer_ = std::make_unique<OMAC<16, 32>>(*cipher_);
-    }
+    else
+        second_stage_macer_ = std::make_unique<OMAC<Kuznechik>>(inner_key);
 }
 
 template <

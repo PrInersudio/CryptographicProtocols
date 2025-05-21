@@ -199,8 +199,8 @@ static int getParams(Params &params, int argc, char **argv) noexcept {
 }
 
 template <SecondStageVariants SecondStageVariant>
-void initKuznechikCTXFromKDF(
-        Kuznechik &cipher, const Params &params,
+void initOMACKuznechikCTXFromKDF(
+        OMAC<Kuznechik> &ctx, const Params &params,
         std::ofstream &out_file,
         SecureBuffer<16> &expected_mac
 ) {
@@ -227,22 +227,21 @@ void initKuznechikCTXFromKDF(
         out_file.write(reinterpret_cast<char *>(mac_params.IV), SecondStageMACParams<SecondStageVariant>::DigestSize);
         if (!out_file) throw std::runtime_error("Не удалось записать инициализирующий вектор в выходной файл.");
     }
-    cipher.initKeySchedule(mac_params.key);
+    ctx.initKeySchedule(mac_params.key);
 }
 
 template <SecondStageVariants SecondStageVariant>
 int getOrCheckFileMac(const Params &params) {
-    Kuznechik cipher;
+    OMAC<Kuznechik> ctx;
     std::ofstream out_file;
     if (!params.out_file.empty()) {
         out_file.open(params.out_file, std::ios::binary);
         if (!out_file) throw std::runtime_error("Не удалось открыть файл для записи результата.");
     }
     SecureBuffer<16> expected_mac;
-    initKuznechikCTXFromKDF<SecondStageVariant>(cipher, params, out_file, expected_mac);
+    initOMACKuznechikCTXFromKDF<SecondStageVariant>(ctx, params, out_file, expected_mac);
     std::ifstream file(params.text_file, std::ios::binary);
     if (!file) throw std::runtime_error("Не удалось открыть файл с текстом.");
-    OMAC ctx(cipher);
     std::vector<uint8_t> buf;
     while (fillBuffer(file, buf))
         ctx.update(buf);
