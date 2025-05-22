@@ -5,8 +5,8 @@
 #include <openssl/evp.h>
 #include "Hash.hpp"
 
-template <size_t BlockSize, size_t DigestSize>
-class OpenSSLHash : public Hash<BlockSize, DigestSize> {
+template <size_t BlockLen, size_t DigestLen>
+class OpenSSLHash : public Hash<BlockLen, DigestLen> {
 private:
     EVP_MD_CTX *ctx_;
 
@@ -18,19 +18,22 @@ public:
     inline void update(const uint8_t *data, const size_t size) noexcept override
         { EVP_DigestUpdate(ctx_, data, size); }
     inline std::vector<uint8_t> digest() noexcept override
-        { std::vector<uint8_t> result(DigestSize); EVP_DigestFinal_ex(ctx_, result.data(), NULL); return result; }
+        { std::vector<uint8_t> result(DigestLen); EVP_DigestFinal_ex(ctx_, result.data(), NULL); return result; }
     inline void digest(uint8_t *digest_buffer)
         { EVP_DigestFinal_ex(ctx_, digest_buffer, NULL); }
     inline void clear() noexcept override
         { EVP_DigestInit_ex(ctx_, nullptr, nullptr); }
     ~OpenSSLHash() noexcept;
+
+    static constexpr size_t BlockSize = BlockLen;
+    static constexpr size_t DigestSize = DigestLen;
 };
 
-template <size_t BlockSize, size_t DigestSize>
-bool OpenSSLHash<BlockSize, DigestSize>::OpenSSLAddedAllAlgs = false;
+template <size_t BlockLen, size_t DigestLen>
+bool OpenSSLHash<BlockLen, DigestLen>::OpenSSLAddedAllAlgs = false;
 
-template <size_t BlockSize, size_t DigestSize>
-OpenSSLHash<BlockSize, DigestSize>::OpenSSLHash(const char *algname) {
+template <size_t BlockLen, size_t DigestLen>
+OpenSSLHash<BlockLen, DigestLen>::OpenSSLHash(const char *algname) {
     if (!OpenSSLAddedAllAlgs) {
         OPENSSL_add_all_algorithms_conf();
         OpenSSLAddedAllAlgs = true;
@@ -42,8 +45,8 @@ OpenSSLHash<BlockSize, DigestSize>::OpenSSLHash(const char *algname) {
     EVP_DigestInit_ex(ctx_, md, NULL);
 }
 
-template <size_t BlockSize, size_t DigestSize>
-OpenSSLHash<BlockSize, DigestSize>::~OpenSSLHash() noexcept {
+template <size_t BlockLen, size_t DigestLen>
+OpenSSLHash<BlockLen, DigestLen>::~OpenSSLHash() noexcept {
     EVP_MD_CTX_free(ctx_);
 }
 

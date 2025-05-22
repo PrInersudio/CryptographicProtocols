@@ -1,32 +1,35 @@
 #include <iostream>
 #include <fstream>
+#include "NMAC256.hpp"
+#include "HMAC.hpp"
+#include "SimpleMAC.hpp"
 #include "KDF_R_13235651022.hpp"
 #include "Utils.hpp"
+
+enum class InnerMACVariants { NMAC = 0, HMAC = 1, Simple = 2 };
+enum class OuterMACVariants { NMAC = 0, HMAC256 = 1, HMAC512 = 2, CMAC = 3 };
 
 struct Params {
     std::string key_file = "";
     std::string text_file = "";
     std::string out_file = "";
     std::string mac_file = "";
-    FirstStageVariants first_stage_variant = FirstStageVariants::NMAC;
-    SecondStageVariants second_stage_variant = SecondStageVariants::CMAC;
+    InnerMACVariants first_stage_variant = InnerMACVariants::NMAC;
+    OuterMACVariants second_stage_variant = OuterMACVariants::CMAC;
     uint8_t user_info[16] = {0x00};
     uint8_t additional_info[16] = {0x00};
 };
 
-template <SecondStageVariants SecondStageVariant>
+template <IsMAC OuterMAC>
 struct MacParams {
     SecureBuffer<32> key;
     SecureBuffer<32> salt;
-    uint8_t IV[SecondStageMACParams<SecondStageVariant>::DigestSize];
+    uint8_t IV[OuterMAC::DigestSize];
 };
 
-template <
-    FirstStageVariants FirstStageVariant,
-    SecondStageVariants SecondStageVariant
->
+template <IsMAC InnerMAC, IsMAC OuterMAC>
 void getMacParams(
-    MacParams<SecondStageVariant> &mac_params,
+    MacParams<OuterMAC> &mac_params,
     const Params &params,
     SecureBuffer<16> &expected_mac
 ) {
@@ -57,7 +60,7 @@ void getMacParams(
     if (!mac_params_source) throw std::runtime_error("Ошибка получения соли.");
     mac_params_source.read(
         reinterpret_cast<char *>(mac_params.IV),
-        SecondStageMACParams<SecondStageVariant>::DigestSize
+        OuterMAC::DigestSize
     );
     if (!mac_params_source) throw std::runtime_error("Ошибка получения инициализирующего вектора.");
     if (!params.mac_file.empty()) {
@@ -65,7 +68,7 @@ void getMacParams(
         if (!mac_params_source) throw std::runtime_error("Ошибка получения ожидаемого MAC.");
     }
     mac_params_source.close();
-    KDF_R_13235651022<FirstStageVariant, SecondStageVariant, 32, 32> kdf(key, mac_params.salt);
+    KDF_R_13235651022<InnerMAC, OuterMAC, 32> kdf(key, mac_params.salt);
     static constexpr uint8_t application_info[] = {
         'D','i','g','e','s','t',' ','k','e','y',' ','f','o','r',' ',
         'K','u','z','n','e','c','h','i','k','-','O','M','A','C','.','.','.'
@@ -124,11 +127,11 @@ static int getParams(Params &params, int argc, char **argv) noexcept {
             case 'f': {
                 std::string first_stage_string(optarg);
                 if (first_stage_string == "NMAC")
-                    params.first_stage_variant = FirstStageVariants::NMAC;
+                    params.first_stage_variant = InnerMACVariants::NMAC;
                 else if (first_stage_string == "HMAC")
-                    params.first_stage_variant = FirstStageVariants::HMAC;
+                    params.first_stage_variant = InnerMACVariants::HMAC;
                 else if (first_stage_string == "Simple")
-                    params.first_stage_variant = FirstStageVariants::Simple;
+                    params.first_stage_variant = InnerMACVariants::Simple;
                 else {
                     std::cerr << "Ошибка: неизвестный вариант первого этапа." << std::endl;
                     printHelp(argv[0]);
@@ -139,13 +142,13 @@ static int getParams(Params &params, int argc, char **argv) noexcept {
             case 's': {
                 std::string second_stage_string(optarg);
                 if (second_stage_string == "NMAC")
-                    params.second_stage_variant = SecondStageVariants::NMAC;
+                    params.second_stage_variant = OuterMACVariants::NMAC;
                 else if (second_stage_string == "HMAC256")
-                    params.second_stage_variant = SecondStageVariants::HMAC256;
+                    params.second_stage_variant = OuterMACVariants::HMAC256;
                 else if (second_stage_string == "HMAC512")
-                    params.second_stage_variant = SecondStageVariants::HMAC512;
+                    params.second_stage_variant = OuterMACVariants::HMAC512;
                 else if (second_stage_string == "CMAC")
-                    params.second_stage_variant = SecondStageVariants::CMAC;
+                    params.second_stage_variant = OuterMACVariants::CMAC;
                 else {
                     std::cerr << "Ошибка: неизвестный вариант второго этапа." << std::endl;
                     printHelp(argv[0]);
@@ -198,24 +201,24 @@ static int getParams(Params &params, int argc, char **argv) noexcept {
     return 0;
 }
 
-template <SecondStageVariants SecondStageVariant>
+template <IsMAC OuterMAC>
 void initOMACKuznechikCTXFromKDF(
         OMAC<Kuznechik> &ctx, const Params &params,
         std::ofstream &out_file,
         SecureBuffer<16> &expected_mac
 ) {
-    MacParams<SecondStageVariant> mac_params;
+    MacParams<OuterMAC> mac_params;
     switch (params.first_stage_variant) {
-        case FirstStageVariants::NMAC: {
-            getMacParams<FirstStageVariants::NMAC, SecondStageVariant>(mac_params, params, expected_mac);
+        case InnerMACVariants::NMAC: {
+            getMacParams<NMAC256<32>, OuterMAC>(mac_params, params, expected_mac);
             break;
         }
-        case FirstStageVariants::HMAC: {
-            getMacParams<FirstStageVariants::HMAC, SecondStageVariant>(mac_params, params, expected_mac);
+        case InnerMACVariants::HMAC: {
+            getMacParams<HMAC<Streebog512, 32>, OuterMAC>(mac_params, params, expected_mac);
             break;
         }
-        case FirstStageVariants::Simple: {
-            getMacParams<FirstStageVariants::Simple, SecondStageVariant>(mac_params, params, expected_mac);
+        case InnerMACVariants::Simple: {
+            getMacParams<SimpleMAC<32>, OuterMAC>(mac_params, params, expected_mac);
             break;
         }
         default:
@@ -224,13 +227,13 @@ void initOMACKuznechikCTXFromKDF(
     if (out_file.is_open()) {
         out_file.write(reinterpret_cast<char *>(mac_params.salt.raw()), 32);
         if (!out_file) throw std::runtime_error("Не удалось записать соль в выходной файл.");
-        out_file.write(reinterpret_cast<char *>(mac_params.IV), SecondStageMACParams<SecondStageVariant>::DigestSize);
+        out_file.write(reinterpret_cast<char *>(mac_params.IV), OuterMAC::DigestSize);
         if (!out_file) throw std::runtime_error("Не удалось записать инициализирующий вектор в выходной файл.");
     }
     ctx.initKeySchedule(mac_params.key);
 }
 
-template <SecondStageVariants SecondStageVariant>
+template <IsMAC OuterMAC>
 int getOrCheckFileMac(const Params &params) {
     OMAC<Kuznechik> ctx;
     std::ofstream out_file;
@@ -239,7 +242,7 @@ int getOrCheckFileMac(const Params &params) {
         if (!out_file) throw std::runtime_error("Не удалось открыть файл для записи результата.");
     }
     SecureBuffer<16> expected_mac;
-    initOMACKuznechikCTXFromKDF<SecondStageVariant>(ctx, params, out_file, expected_mac);
+    initOMACKuznechikCTXFromKDF<OuterMAC>(ctx, params, out_file, expected_mac);
     std::ifstream file(params.text_file, std::ios::binary);
     if (!file) throw std::runtime_error("Не удалось открыть файл с текстом.");
     std::vector<uint8_t> buf;
@@ -268,20 +271,20 @@ int main(int argc, char **argv) {
     int rc = 0;
     try {
         switch (params.second_stage_variant) {
-            case SecondStageVariants::NMAC: {
-                rc = getOrCheckFileMac<SecondStageVariants::NMAC>(params);
+            case OuterMACVariants::NMAC: {
+                rc = getOrCheckFileMac<NMAC256<32>>(params);
                 break;
             }
-            case SecondStageVariants::HMAC256: {
-                rc = getOrCheckFileMac<SecondStageVariants::HMAC256>(params);
+            case OuterMACVariants::HMAC256: {
+                rc = getOrCheckFileMac<HMAC<Streebog256, 32>>(params);
                 break;
             }
-            case SecondStageVariants::HMAC512: {
-                rc = getOrCheckFileMac<SecondStageVariants::HMAC512>(params);
+            case OuterMACVariants::HMAC512: {
+                rc = getOrCheckFileMac<HMAC<Streebog512, 32>>(params);
                 break;
             }
-            case SecondStageVariants::CMAC: {
-                rc = getOrCheckFileMac<SecondStageVariants::CMAC>(params);
+            case OuterMACVariants::CMAC: {
+                rc = getOrCheckFileMac<OMAC<Kuznechik>>(params);
                 break;
             }
             default:

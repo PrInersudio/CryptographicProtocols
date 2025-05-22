@@ -1,7 +1,19 @@
 #include <gtest/gtest.h>
 #include <iomanip>
+
+#include "NMAC256.hpp"
+#include "OpenSSLNMAC256.hpp"
+
+#include "HMAC.hpp"
+#include "OpenSSLStreebog256HMAC.hpp"
+#include "OpenSSLStreebog512HMAC.hpp"
+
+#include "OMAC.hpp"
+#include "Kuznechik.hpp"
+#include "OpenSSLKuznechikOMAC.hpp"
+
+#include "SimpleMAC.hpp"
 #include "KDF_R_13235651022.hpp"
-#include "OpenSSLKDF_R_13235651022.hpp"
 
 template <size_t N>
 void PrintTo(const SecureBuffer<N> &buf, std::ostream* os) {
@@ -28,16 +40,8 @@ TEST(KDF_R_13235651022Test, TestFirstNMACSecondNMAC) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::NMAC,
-        SecondStageVariants::NMAC,
-        128, 128
-    > kdf(master_key, salt);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::NMAC,
-        OpenSSLSecondStageVariants::NMAC,
-        128, 128
-    > openssl_kdf(master_key, salt);
+    KDF_R_13235651022<NMAC256<128>, NMAC256<32>, 128> kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLNMAC256<128>, OpenSSLNMAC256<32>, 128>  openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
     SecureBuffer<256> key2;
     kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
@@ -62,16 +66,8 @@ TEST(KDF_R_13235651022Test, TestFirstNMACSecondHMAC256) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::NMAC,
-        SecondStageVariants::HMAC256,
-        128, 128
-    > kdf(master_key, salt);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::NMAC,
-        OpenSSLSecondStageVariants::HMAC256,
-        128, 128
-    > openssl_kdf(master_key, salt);
+    KDF_R_13235651022<NMAC256<128>, HMAC<Streebog256, 32>, 128> kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLNMAC256<128>, OpenSSLStreebog256HMAC<32>, 128>  openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
     SecureBuffer<256> key2;
     kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
@@ -96,16 +92,8 @@ TEST(KDF_R_13235651022Test, TestFirstNMACSecondHMAC512) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::NMAC,
-        SecondStageVariants::HMAC512,
-        128, 128
-    > kdf(master_key, salt);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::NMAC,
-        OpenSSLSecondStageVariants::HMAC512,
-        128, 128
-    > openssl_kdf(master_key, salt);
+    KDF_R_13235651022<NMAC256<128>, HMAC<Streebog512, 32>, 128> kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLNMAC256<128>, OpenSSLStreebog512HMAC<32>, 128>  openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
     SecureBuffer<256> key2;
     kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
@@ -130,16 +118,8 @@ TEST(KDF_R_13235651022Test, TestFirstNMACSecondCMAC) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::NMAC,
-        SecondStageVariants::CMAC,
-        128, 128
-    > kdf(master_key, salt);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::NMAC,
-        OpenSSLSecondStageVariants::CMAC,
-        128, 128
-    > openssl_kdf(master_key, salt);
+    KDF_R_13235651022<NMAC256<128>, OMAC<Kuznechik>, 128> kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLNMAC256<128>, OpenSSLKuznechikOMAC, 128>  openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
     SecureBuffer<256> key2;
     kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
@@ -164,16 +144,8 @@ TEST(KDF_R_13235651022Test, TestFirstHMACSecondNMAC) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::HMAC,
-        SecondStageVariants::NMAC,
-        128, 128
-    > kdf(master_key, salt);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::HMAC,
-        OpenSSLSecondStageVariants::NMAC,
-        128, 128
-    > openssl_kdf(master_key, salt);
+    KDF_R_13235651022<HMAC<Streebog512,  128>, NMAC256<32>, 128> kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLStreebog512HMAC<128>, OpenSSLNMAC256<32>, 128>  openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
     SecureBuffer<256> key2;
     kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
@@ -198,16 +170,8 @@ TEST(KDF_R_13235651022Test, TestFirstHMACSecondHMAC256) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::HMAC,
-        SecondStageVariants::HMAC256,
-        128, 128
-    > kdf(master_key, salt);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::HMAC,
-        OpenSSLSecondStageVariants::HMAC256,
-        128, 128
-    > openssl_kdf(master_key, salt);
+    KDF_R_13235651022<HMAC<Streebog512,  128>, HMAC<Streebog256, 32>, 128> kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLStreebog512HMAC<128>, OpenSSLStreebog256HMAC<32>, 128>  openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
     SecureBuffer<256> key2;
     kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
@@ -232,16 +196,8 @@ TEST(KDF_R_13235651022Test, TestFirstHMACSecondHMAC512) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::HMAC,
-        SecondStageVariants::HMAC512,
-        128, 128
-    > kdf(master_key, salt);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::HMAC,
-        OpenSSLSecondStageVariants::HMAC512,
-        128, 128
-    > openssl_kdf(master_key, salt);
+    KDF_R_13235651022<HMAC<Streebog512,  128>, HMAC<Streebog512, 32>, 128> kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLStreebog512HMAC<128>, OpenSSLStreebog512HMAC<32>, 128>  openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
     SecureBuffer<256> key2;
     kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
@@ -266,16 +222,8 @@ TEST(KDF_R_13235651022Test, TestFirstHMACSecondCMAC) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::HMAC,
-        SecondStageVariants::CMAC,
-        128, 128
-    > kdf(master_key, salt);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::HMAC,
-        OpenSSLSecondStageVariants::CMAC,
-        128, 128
-    > openssl_kdf(master_key, salt);
+    KDF_R_13235651022<HMAC<Streebog512,  128>, OMAC<Kuznechik>, 128> kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLStreebog512HMAC<128>, OpenSSLKuznechikOMAC, 128>  openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
     SecureBuffer<256> key2;
     kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
@@ -300,16 +248,8 @@ TEST(KDF_R_13235651022Test, TestFirstSimpleSecondNMAC) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::Simple,
-        SecondStageVariants::NMAC,
-        32, 32
-    > kdf(master_key, salt);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::Simple,
-        OpenSSLSecondStageVariants::NMAC,
-        32, 32
-    > openssl_kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, NMAC256<32>, 32> kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, OpenSSLNMAC256<32>, 32>  openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
     SecureBuffer<256> key2;
     kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
@@ -334,16 +274,8 @@ TEST(KDF_R_13235651022Test, TestFirstSimpleSecondHMAC256) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::Simple,
-        SecondStageVariants::HMAC256,
-        32, 32
-    > kdf(master_key, salt);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::Simple,
-        OpenSSLSecondStageVariants::HMAC256,
-        32, 32
-    > openssl_kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, HMAC<Streebog256, 32>, 32> kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, OpenSSLStreebog256HMAC<32>, 32>  openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
     SecureBuffer<256> key2;
     kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
@@ -368,16 +300,8 @@ TEST(KDF_R_13235651022Test, TestFirstSimpleSecondHMAC512) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::Simple,
-        SecondStageVariants::HMAC512,
-        32, 32
-    > kdf(master_key, salt);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::Simple,
-        OpenSSLSecondStageVariants::HMAC512,
-        32, 32
-    > openssl_kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, HMAC<Streebog512, 32>, 32> kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, OpenSSLStreebog512HMAC<32>, 32>  openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
     SecureBuffer<256> key2;
     kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
@@ -402,16 +326,8 @@ TEST(KDF_R_13235651022Test, TestFirstSimpleSecondCMAC) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::Simple,
-        SecondStageVariants::CMAC,
-        32, 32
-    > kdf(master_key, salt);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::Simple,
-        OpenSSLSecondStageVariants::CMAC,
-        32, 32
-    > openssl_kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, OMAC<Kuznechik>, 32> kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, OpenSSLKuznechikOMAC, 32>  openssl_kdf(master_key, salt);
     SecureBuffer<256> key1;
     SecureBuffer<256> key2;
     kdf.fetch(key1.raw(), 256, IV, application_info, user_info, additional_info);
@@ -436,16 +352,8 @@ TEST(KDF_R_13235651022Test, TestKeyLengthWithRemainder) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::NMAC,
-        SecondStageVariants::NMAC,
-        128, 128
-    > kdf(master_key, salt);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::NMAC,
-        OpenSSLSecondStageVariants::NMAC,
-        128, 128
-    > openssl_kdf(master_key, salt);
+    KDF_R_13235651022<NMAC256<128>, NMAC256<32>, 128> kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLNMAC256<128>, OpenSSLNMAC256<32>, 128>  openssl_kdf(master_key, salt);
     SecureBuffer<250> key1;
     SecureBuffer<250> key2;
     kdf.fetch(key1.raw(), 250, IV, application_info, user_info, additional_info);
@@ -470,11 +378,7 @@ TEST(KDF_R_13235651022Test, TestDoubleUse) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::NMAC,
-        SecondStageVariants::NMAC,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<NMAC256<128>, NMAC256<32>, 128> kdf(master_key, salt);
     SecureBuffer<250> key1;
     SecureBuffer<250> key2;
     kdf.fetch(key1.raw(), 250, IV, application_info, user_info, additional_info);

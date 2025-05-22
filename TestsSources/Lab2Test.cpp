@@ -1,6 +1,18 @@
 #include <benchmark/benchmark.h>
+
+#include "NMAC256.hpp"
+#include "OpenSSLNMAC256.hpp"
+
+#include "HMAC.hpp"
+#include "OpenSSLStreebog256HMAC.hpp"
+#include "OpenSSLStreebog512HMAC.hpp"
+
+#include "OMAC.hpp"
+#include "Kuznechik.hpp"
+#include "OpenSSLKuznechikOMAC.hpp"
+
+#include "SimpleMAC.hpp"
 #include "KDF_R_13235651022.hpp"
-#include "OpenSSLKDF_R_13235651022.hpp"
 
 template<size_t N>
 static SecureBuffer<N> filled(uint8_t val) {
@@ -20,11 +32,7 @@ void KDF_R_13235651022_FirstNMACSecondNMAC(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::NMAC,
-        SecondStageVariants::NMAC,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<NMAC256<128>, NMAC256<32>, 128> kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -44,11 +52,7 @@ void KDF_R_13235651022_FirstNMACSecondHMAC256(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::NMAC,
-        SecondStageVariants::HMAC256,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<NMAC256<128>, HMAC<Streebog256, 32>, 128> kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -68,11 +72,7 @@ void KDF_R_13235651022_FirstNMACSecondHMAC512(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::NMAC,
-        SecondStageVariants::HMAC512,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<NMAC256<128>, HMAC<Streebog512, 32>, 128> kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -92,11 +92,7 @@ void KDF_R_13235651022_FirstNMACSecondCMAC(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::NMAC,
-        SecondStageVariants::CMAC,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<NMAC256<128>, OMAC<Kuznechik>, 128> kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -116,11 +112,7 @@ void KDF_R_13235651022_FirstHMACSecondNMAC(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::HMAC,
-        SecondStageVariants::NMAC,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<HMAC<Streebog512,  128>, NMAC256<32>, 128> kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -140,11 +132,7 @@ void KDF_R_13235651022_FirstHMACSecondHMAC256(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::HMAC,
-        SecondStageVariants::HMAC256,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<HMAC<Streebog512,  128>, HMAC<Streebog256, 32>, 128> kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -164,11 +152,7 @@ void KDF_R_13235651022_FirstHMACSecondHMAC512(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::HMAC,
-        SecondStageVariants::HMAC512,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<HMAC<Streebog512,  128>, HMAC<Streebog512, 32>, 128> kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -188,11 +172,7 @@ void KDF_R_13235651022_FirstHMACSecondCMAC(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::HMAC,
-        SecondStageVariants::CMAC,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<HMAC<Streebog512,  128>, OMAC<Kuznechik>, 128> kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -212,11 +192,7 @@ void KDF_R_13235651022_FirstSimpleSecondNMAC(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::Simple,
-        SecondStageVariants::NMAC,
-        32, 32
-    > kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, NMAC256<32>, 32> kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -236,11 +212,7 @@ void KDF_R_13235651022_FirstSimpleSecondHMAC256(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::Simple,
-        SecondStageVariants::HMAC256,
-        32, 32
-    > kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, HMAC<Streebog256, 32>, 32> kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -260,11 +232,7 @@ void KDF_R_13235651022_FirstSimpleSecondHMAC512(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::Simple,
-        SecondStageVariants::HMAC512,
-        32, 32
-    > kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, HMAC<Streebog512, 32>, 32> kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -284,11 +252,7 @@ void KDF_R_13235651022_FirstSimpleSecondCMAC(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    KDF_R_13235651022<
-        FirstStageVariants::Simple,
-        SecondStageVariants::CMAC,
-        32, 32
-    > kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, OMAC<Kuznechik>, 32> kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -308,11 +272,7 @@ void KDF_R_13235651022_OpenSSLFirstNMACSecondNMAC(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::NMAC,
-        OpenSSLSecondStageVariants::NMAC,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLNMAC256<128>, OpenSSLNMAC256<32>, 128>  kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -332,11 +292,7 @@ void KDF_R_13235651022_OpenSSLFirstNMACSecondHMAC256(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::NMAC,
-        OpenSSLSecondStageVariants::HMAC256,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLNMAC256<128>, OpenSSLStreebog256HMAC<32>, 128>  kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -356,11 +312,7 @@ void KDF_R_13235651022_OpenSSLFirstNMACSecondHMAC512(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::NMAC,
-        OpenSSLSecondStageVariants::HMAC512,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLNMAC256<128>, OpenSSLStreebog512HMAC<32>, 128>  kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -380,11 +332,7 @@ void KDF_R_13235651022_OpenSSLFirstNMACSecondCMAC(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::NMAC,
-        OpenSSLSecondStageVariants::CMAC,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLNMAC256<128>, OpenSSLKuznechikOMAC, 128>  kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -404,11 +352,7 @@ void KDF_R_13235651022_OpenSSLFirstHMACSecondNMAC(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::HMAC,
-        OpenSSLSecondStageVariants::NMAC,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLStreebog512HMAC<128>, OpenSSLNMAC256<32>, 128>  kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -428,11 +372,7 @@ void KDF_R_13235651022_OpenSSLFirstHMACSecondHMAC256(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::HMAC,
-        OpenSSLSecondStageVariants::HMAC256,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLStreebog512HMAC<128>, OpenSSLStreebog256HMAC<32>, 128>  kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -452,11 +392,7 @@ void KDF_R_13235651022_OpenSSLFirstHMACSecondHMAC512(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::HMAC,
-        OpenSSLSecondStageVariants::HMAC512,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLStreebog512HMAC<128>, OpenSSLStreebog512HMAC<32>, 128>  kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -476,11 +412,7 @@ void KDF_R_13235651022_OpenSSLFirstHMACSecondCMAC(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::HMAC,
-        OpenSSLSecondStageVariants::CMAC,
-        128, 128
-    > kdf(master_key, salt);
+    KDF_R_13235651022<OpenSSLStreebog512HMAC<128>, OpenSSLKuznechikOMAC, 128>  kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -500,11 +432,7 @@ void KDF_R_13235651022_OpenSSLFirstSimpleSecondNMAC(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::Simple,
-        OpenSSLSecondStageVariants::NMAC,
-        32, 32
-    > kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, OpenSSLNMAC256<32>, 32>  kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -524,11 +452,7 @@ void KDF_R_13235651022_OpenSSLFirstSimpleSecondHMAC256(benchmark::State& state) 
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::Simple,
-        OpenSSLSecondStageVariants::HMAC256,
-        32, 32
-    > kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, OpenSSLStreebog256HMAC<32>, 32>  kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -548,11 +472,7 @@ void KDF_R_13235651022_OpenSSLFirstSimpleSecondHMAC512(benchmark::State& state) 
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::Simple,
-        OpenSSLSecondStageVariants::HMAC512,
-        32, 32
-    > kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, OpenSSLStreebog512HMAC<32>, 32>  kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);
@@ -572,11 +492,7 @@ void KDF_R_13235651022_OpenSSLFirstSimpleSecondCMAC(benchmark::State& state) {
     memset(user_info, 0xEE, 16);
     uint8_t additional_info[16];
     memset(additional_info, 0xFF, 16);
-    OpenSSLKDF_R_13235651022<
-        OpenSSLFirstStageVariants::Simple,
-        OpenSSLSecondStageVariants::CMAC,
-        32, 32
-    > kdf(master_key, salt);
+    KDF_R_13235651022<SimpleMAC<32>, OpenSSLKuznechikOMAC, 32>  kdf(master_key, salt);
     for (auto _ : state) {
         uint8_t keys[32000000];
         kdf.fetch(keys, 32000000, IV, application_info, user_info, additional_info);

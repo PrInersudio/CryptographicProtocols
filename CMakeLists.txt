@@ -133,6 +133,12 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
     add_test(NAME HMACTest COMMAND HMACTest)
     set_tests_properties(HMACTest PROPERTIES LABELS "Lab2")
 
+    add_executable(SimpleMACTest ${TESTS_SOURCES_DIR}/SimpleMACTest.cpp)
+    target_link_libraries(SimpleMACTest PRIVATE GTest::GTest)
+    add_test(NAME SimpleMACTest COMMAND SimpleMACTest)
+    set_tests_properties(SimpleMACTest PROPERTIES LABELS "Lab2")
+
+
     execute_process(
         COMMAND bash -c "dd if=/dev/urandom of=${LAB1_TESTS_DATA_DIR}/1MB.bin bs=1M count=1"
     )

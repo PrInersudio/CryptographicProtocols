@@ -32,5 +32,9 @@ public:
         { return digest(16); }
     void digest(uint8_t *digest_buffer) override;
     inline void clear() override { free(); initKeySchedule(key_); }
+
+    static constexpr size_t BlockSize = 16;
+    static constexpr size_t DigestSize = 16;
+    static constexpr size_t KeySize = 32;
 };
 #endif

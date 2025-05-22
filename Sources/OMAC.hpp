@@ -36,6 +36,11 @@ public:
         buffered_len_ = 0; accumulator_.zero(); digest_key_.zero();
         ctx_.encrypt(digest_key_); transformAdditionalKey(digest_key_);
     }
+
+    static constexpr size_t BlockSize = CipherType::BlockSize;
+    static constexpr size_t DigestSize = CipherType::BlockSize;
+    static constexpr size_t KeySize = CipherType::KeySize;
+
 #ifdef UNIT_TESTS
     inline const SecureBuffer<CipherType::BlockSize> &getAccumulator() const noexcept
         { return accumulator_; }
