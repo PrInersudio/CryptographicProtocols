@@ -106,7 +106,7 @@ TEST(SecureBufferTest, AssignmentToSelf) {
         EXPECT_EQ(original[i], i + 1);
 }
 
-#ifndef SECUREBUFFER_BIG_ENDIAN_CONTER
+#ifndef SECUREBUFFER_BIG_ENDIAN_COUNTER
 TEST(SecureBufferTest, Add) {
     SecureBuffer<4> buf; buf.zero();
     buf.add(1);

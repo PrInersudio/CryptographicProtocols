@@ -13,14 +13,26 @@ class SecureBuffer {
 private:
     uint8_t data_[N];
 public:
-    SecureBuffer();
-    SecureBuffer(std::initializer_list<uint8_t> init);
-    SecureBuffer(const SecureBuffer &original) noexcept;
-    SecureBuffer(SecureBuffer &&other);
+    inline SecureBuffer() { if (mlock(data_, N)) throw std::bad_alloc(); }
+    inline SecureBuffer(std::initializer_list<uint8_t> init) : SecureBuffer()
+        { std::copy(init.begin(), init.end(), data_); }
+    inline SecureBuffer(const SecureBuffer &original) : SecureBuffer()
+        { memcpy(data_, original.data_, N); }
+    inline SecureBuffer(SecureBuffer &&original) : SecureBuffer()
+        { memcpy(data_, original.data_, N); original.zero(); }
+    inline SecureBuffer(const uint8_t (&data)[N]) : SecureBuffer()
+        { memcpy(data_, data, N); }
+    inline SecureBuffer(uint8_t (&&data)[N]) : SecureBuffer()
+        { memcpy(data_, data, N); memset(data, 0, N); }
     inline SecureBuffer& operator=(const SecureBuffer &original) noexcept
-        { if (this != &original) std::copy(original.data_, original.data_ + N, data_); return *this; }
+        { if (this != &original) memcpy(data_, original.data_, N); return *this; }
     inline SecureBuffer& operator=(SecureBuffer &&original) noexcept
-        { if (this != &original) {std::copy(original.data_, original.data_ + N, data_); original.zero();} return *this; }
+        { if (this != &original) { memcpy(data_, original.data_, N); original.zero(); } 
+            return *this; }
+    inline SecureBuffer& operator=(const uint8_t (&data)[N]) noexcept
+        { memcpy(data_, data, N); return *this; }
+    inline SecureBuffer& operator=(uint8_t (&&data)[N]) noexcept
+        { memcpy(data_, data, N); memset(data, 0, N); return *this; }
     ~SecureBuffer() noexcept;
     inline uint8_t &operator[](const size_t i) noexcept { return data_[i]; }
     inline const uint8_t &operator[](const size_t i) const noexcept { return data_[i]; }
@@ -42,30 +54,8 @@ public:
     SecureBuffer<N> &add(const size_t num);
 };
 
-template <size_t N>
-SecureBuffer<N>::SecureBuffer() {
-    if (mlock(data_, N))
-        throw std::bad_alloc();
-}
-
 template <typename... Ts>
 SecureBuffer(Ts...) -> SecureBuffer<sizeof...(Ts)>;
-
-template <size_t N>
-SecureBuffer<N>::SecureBuffer(std::initializer_list<uint8_t> init) : SecureBuffer() {
-    std::copy(init.begin(), init.end(), data_);
-}
-
-template <size_t N>
-SecureBuffer<N>::SecureBuffer(const SecureBuffer &original) noexcept : SecureBuffer() {
-    std::copy(original.data_, original.data_ + N, data_);
-}
-
-template <size_t N>
-SecureBuffer<N>::SecureBuffer(SecureBuffer &&original) : SecureBuffer() {
-    std::copy(original.data_, original.data_ + N, data_);
-    original.zero();
-}
 
 template <size_t N>
 SecureBuffer<N>::~SecureBuffer() noexcept {
@@ -103,7 +93,7 @@ SecureBuffer<N> &SecureBuffer<N>::operator<<=(const size_t shift) noexcept {
 }
 
 
-#ifndef SECUREBUFFER_BIG_ENDIAN_CONTER
+#ifndef SECUREBUFFER_BIG_ENDIAN_COUNTER
 template<size_t N>
 SecureBuffer<N> &SecureBuffer<N>::add(size_t num) {
     uint16_t carry = 0;

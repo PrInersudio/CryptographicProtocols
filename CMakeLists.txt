@@ -84,6 +84,8 @@ endif()
 add_library(Kuznechik OBJECT ${SOURCES_DIR}/Kuznechik.cpp)
 add_library(Utils OBJECT ${SOURCES_DIR}/Utils.cpp)
 add_library(Streebog OBJECT ${SOURCES_DIR}/Streebog.cpp)
+add_library(CryptographicSuites OBJECT ${SOURCES_DIR}/CryptographicSuites.cpp)
+add_library(CRISPMessage OBJECT ${SOURCES_DIR}/CRISPMessage.cpp)
 
 # Сборка программ.
 add_executable(lab1 ${SOURCES_DIR}/Lab1Main.cpp)
@@ -171,6 +173,16 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
         target_link_libraries(CTR_DRBGTest PRIVATE OpenSSL::SSL OpenSSL::Crypto GTest::GTest TBB::tbb)
         add_test(NAME CTR_DRBGTest COMMAND CTR_DRBGTest)
         set_tests_properties(CTR_DRBGTest PROPERTIES LABELS "Lab3")
+
+        add_executable(CTRTest ${TESTS_SOURCES_DIR}/CTRTest.cpp)
+        target_link_libraries(CTRTest PRIVATE Kuznechik GTest::GTest TBB::tbb)
+        add_test(NAME CTRTest COMMAND CTRTest)
+        set_tests_properties(CTRTest PROPERTIES LABELS "Lab4")
+
+        add_executable(CRISPMessageTest ${TESTS_SOURCES_DIR}/CRISPMessageTest.cpp)
+        target_link_libraries(CRISPMessageTest PRIVATE CryptographicSuites CRISPMessage GTest::GTest)
+        add_test(NAME CRISPMessageTest COMMAND CRISPMessageTest)
+        set_tests_properties(CRISPMessageTest PROPERTIES LABELS "Lab4")
 
         find_package(benchmark REQUIRED)
 

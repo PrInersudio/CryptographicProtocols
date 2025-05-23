@@ -2,7 +2,6 @@
 #include <openssl/evp.h>
 #include <array>
 #include <iomanip>
-#define SECUREBUFFER_BIG_ENDIAN_CONTER
 #include "CTR_DRBG.hpp"
 
 class OpenSSLAES256 : public Cipher<16, 32> {

@@ -8,6 +8,7 @@
 #include <tbb/blocked_range.h>
 #endif
 
+#define SECUREBUFFER_BIG_ENDIAN_COUNTER
 #include "Cipher.hpp"
 #include "Hash.hpp"
 #include "EntropySource.hpp"
