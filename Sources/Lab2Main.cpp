@@ -202,7 +202,7 @@ static int getParams(Params &params, int argc, char **argv) noexcept {
 }
 
 template <IsMAC OuterMAC>
-void initOMACKuznechikCTXFromKDF(
+void initKuznechikOMACCTXFromKDF(
         OMAC<Kuznechik> &ctx, const Params &params,
         std::ofstream &out_file,
         SecureBuffer<16> &expected_mac
@@ -242,7 +242,7 @@ int getOrCheckFileMac(const Params &params) {
         if (!out_file) throw std::runtime_error("Не удалось открыть файл для записи результата.");
     }
     SecureBuffer<16> expected_mac;
-    initOMACKuznechikCTXFromKDF<OuterMAC>(ctx, params, out_file, expected_mac);
+    initKuznechikOMACCTXFromKDF<OuterMAC>(ctx, params, out_file, expected_mac);
     std::ifstream file(params.text_file, std::ios::binary);
     if (!file) throw std::runtime_error("Не удалось открыть файл с текстом.");
     std::vector<uint8_t> buf;

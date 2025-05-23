@@ -31,7 +31,7 @@ static void Random1MB(benchmark::State& state) {
     }
 
     state.SetBytesProcessed(state.iterations() * static_cast<int64_t>(size));
-    remove(filename.c_str());
+    remove((TestFilesFolder + filename).c_str());
 }
 BENCHMARK(Random1MB);
 
@@ -60,7 +60,7 @@ static void Random100MB(benchmark::State& state) {
     }
 
     state.SetBytesProcessed(state.iterations() * static_cast<int64_t>(size));
-    remove(filename.c_str());
+    remove((TestFilesFolder + filename).c_str());
 }
 BENCHMARK(Random100MB);
 
@@ -89,7 +89,7 @@ static void Random1000MB(benchmark::State& state) {
     }
 
     state.SetBytesProcessed(state.iterations() * static_cast<int64_t>(size));
-    remove(filename.c_str());
+    remove((TestFilesFolder + filename).c_str());
 }
 BENCHMARK(Random1000MB);
 

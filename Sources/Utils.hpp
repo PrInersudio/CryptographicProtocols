@@ -8,7 +8,7 @@
 
 
 void checkTimestamp(const uint64_t timestamp_raw) noexcept;
-void initOMACKuznechikCTX(OMAC<Kuznechik> &ctx, const char *filename);
+void initKuznechikOMACCTX(OMAC<Kuznechik> &ctx, const char *filename);
 bool checkModeParam(const char *mode_param, bool &encrypt);
 std::vector<uint8_t> parseHexString(const std::string& hex);
 std::string toHexString(const std::vector<uint8_t> &data) noexcept;

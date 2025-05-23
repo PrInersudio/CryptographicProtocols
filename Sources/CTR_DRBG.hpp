@@ -34,6 +34,8 @@ template <
 class CTR_DRBG {
 private:
     static constexpr size_t SeedLen = CipherType::BlockSize + CipherType::KeySize;
+    static constexpr size_t MaxBytesPerRequest =
+        CipherType::BlockSize < 16 ? (static_cast<size_t>(1) << 10) : (static_cast<size_t>(1) << 16);
     static constexpr size_t ReseedInterval =
         CipherType::BlockSize < 16 ? (static_cast<size_t>(1) << 32) : (static_cast<size_t>(1) << 48);
 
@@ -70,7 +72,7 @@ public:
         uint8_t *buffer, size_t size,
         const uint8_t *additional_input = nullptr,
         const size_t additional_input_len = 0
-    ) noexcept;
+    );
 };
 
 template <IsCipher CipherType, bool AutoReseed, IsEntropySource<CipherType::BlockSize + CipherType::KeySize> EntropySourceType>
@@ -108,10 +110,12 @@ void CTR_DRBG<CipherType, AutoReseed, EntropySourceType>::update(const SecureBuf
 
 template <IsCipher CipherType, bool AutoReseed, IsEntropySource<CipherType::BlockSize + CipherType::KeySize> EntropySourceType>
 int CTR_DRBG<CipherType, AutoReseed, EntropySourceType>::operator()(
-    uint8_t *buffer, size_t size,
+    uint8_t *buffer, const size_t size,
     const uint8_t *additional_input,
     const size_t additional_input_len
-) noexcept {
+) {
+    if (size > MaxBytesPerRequest)
+        throw std::invalid_argument("Запрошенный размер привышает максимум.");
     if (reseed_counter_ > ReseedInterval)
         { if constexpr (AutoReseed) reseed(); else return -1; }
     SecureBuffer<SeedLen> seed; seed.zero();

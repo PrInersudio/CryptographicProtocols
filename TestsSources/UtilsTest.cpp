@@ -51,7 +51,7 @@ TEST(InitKuznechikCTXTest, FileReadSuccess) {
     file.write(reinterpret_cast<char*>(key.raw()), 32);
     file.close();
     OMAC<Kuznechik> ctx;
-    EXPECT_NO_THROW(initOMACKuznechikCTX(ctx, "test_key.bin"));
+    EXPECT_NO_THROW(initKuznechikOMACCTX(ctx, "test_key.bin"));
     static const SecureBuffer<16> round_keys[] = {
         { 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77 },
         { 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef },
@@ -72,7 +72,7 @@ TEST(InitKuznechikCTXTest, FileReadSuccess) {
 
 TEST(InitKuznechikCTXTest, FileReadFailure) {
     OMAC<Kuznechik> ctx;
-    EXPECT_THROW(initOMACKuznechikCTX(ctx, "non_existent_file.bin"), std::runtime_error);
+    EXPECT_THROW(initKuznechikOMACCTX(ctx, "non_existent_file.bin"), std::runtime_error);
 }
 
 TEST(InitKuznechikCTXTest, FileHasNotEnouthForTimestamp) {
@@ -81,7 +81,7 @@ TEST(InitKuznechikCTXTest, FileHasNotEnouthForTimestamp) {
     file.write(test_fill, 4);
     file.close();
     OMAC<Kuznechik> ctx;
-    EXPECT_THROW(initOMACKuznechikCTX(ctx, "test_key.bin"), std::runtime_error);
+    EXPECT_THROW(initKuznechikOMACCTX(ctx, "test_key.bin"), std::runtime_error);
     remove("test_key.bin");
 }
 
@@ -91,7 +91,7 @@ TEST(InitKuznechikCTXTest, FileHasNotEnouthForKey) {
     file.write(test_fill, 4);
     file.close();
     OMAC<Kuznechik> ctx;
-    EXPECT_THROW(initOMACKuznechikCTX(ctx, "test_key.bin"), std::runtime_error);
+    EXPECT_THROW(initKuznechikOMACCTX(ctx, "test_key.bin"), std::runtime_error);
     remove("test_key.bin");
 }
 

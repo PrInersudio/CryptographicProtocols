@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
     try {
         const std::vector<uint8_t> expected_mac = (argc < 4) ? std::vector<uint8_t>{} : parseHexString(argv[3]); 
         OMAC<Kuznechik> ctx;
-        initOMACKuznechikCTX(ctx, argv[1]);
+        initKuznechikOMACCTX(ctx, argv[1]);
         std::ifstream file(argv[2], std::ios::binary);
         if (!file) throw std::runtime_error("Не удалось открыть файл с текстом.");
         std::vector<uint8_t> buf;

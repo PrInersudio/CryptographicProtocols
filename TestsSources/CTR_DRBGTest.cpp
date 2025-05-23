@@ -2398,6 +2398,11 @@ TEST(CTRDRBGTest, Reseed) {
     }
 }
 
+TEST(CTRDRBGTest, MaxBytesPerRequestExceed) {
+    CTR_DRBG<OpenSSLAES256> rng;
+    EXPECT_THROW(rng(nullptr, 1 << 20), std::invalid_argument);
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
