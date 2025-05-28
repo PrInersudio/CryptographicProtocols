@@ -1,9 +1,9 @@
 #include <set>
 #include <future>
-#include "CRISPMessanger.hpp"
+#include "CRISPMessenger.hpp"
 #include "CTR.hpp"
 
-CRISPMessanger::CRISPMessanger(
+CRISPMessenger::CRISPMessenger(
     const uint16_t local_port,
     const std::string &remote_ip,
     const uint16_t remote_port,
@@ -64,7 +64,7 @@ CRISPMessanger::CRISPMessanger(
     );
 }
 
-std::vector<uint8_t> CRISPMessanger::encryptKuznechikCTR(const uint64_t seq_num, const std::vector<uint8_t> &data, const SecureBuffer<32> &key) noexcept {
+std::vector<uint8_t> CRISPMessenger::encryptKuznechikCTR(const uint64_t seq_num, const std::vector<uint8_t> &data, const SecureBuffer<32> &key) noexcept {
     const Kuznechik cipher(key);
     std::vector<uint8_t> payload = data;
     uint8_t IV[16];
@@ -77,7 +77,7 @@ std::vector<uint8_t> CRISPMessanger::encryptKuznechikCTR(const uint64_t seq_num,
     return payload;
 }
 
-CRISPMessanger::MessageParts CRISPMessanger::getMessage(const TCP &tcp) const {
+CRISPMessenger::MessageParts CRISPMessenger::getMessage(const TCP &tcp) const {
     std::vector<uint8_t> size_bytes = tcp(2);
     uint16_t size = (static_cast<uint16_t>(size_bytes[0]) << 8) | size_bytes[1];
     if (size > CRISPMessage::MaxSize)
@@ -138,7 +138,7 @@ CRISPMessanger::MessageParts CRISPMessanger::getMessage(const TCP &tcp) const {
     }
 }
 
-std::string CRISPMessanger::recv() {
+std::string CRISPMessenger::recv() {
     static constexpr uint8_t rng_additional_info[] = {
         'C', 'R', 'I', 'S', 'P', 'M', 'e', 's',
         's', 'a', 'n', 'g', 'e', 'r', ' ', 'f',
@@ -183,63 +183,63 @@ std::string CRISPMessanger::recv() {
     return received.empty() ? static_cast<std::ostringstream *>(stream.get())->str() : received;
 }
 
-CRISPMessanger::MessageFormer CRISPMessanger::chooseMessageFormer() {
+CRISPMessenger::MessageFormer CRISPMessenger::chooseMessageFormer() {
     switch (server_cryptographic_suite_) {
         case CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_NMAC_NMAC:
-            return std::bind(&CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, NMAC256<32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, NMAC256<32>>, this, std::placeholders::_1);
         case CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_NMAC_HMAC256:
-            return std::bind(&CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, HMAC<Streebog256, 32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, HMAC<Streebog256, 32>>, this, std::placeholders::_1);
         case CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_NMAC_HMAC512:
-            return std::bind(&CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, HMAC<Streebog512, 32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, HMAC<Streebog512, 32>>, this, std::placeholders::_1);
         case CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_NMAC_CMAC:
-            return std::bind(&CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, OMAC<Kuznechik>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, OMAC<Kuznechik>>, this, std::placeholders::_1);
         case CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_HMAC_NMAC:
-            return std::bind(&CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, NMAC256<32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, NMAC256<32>>, this, std::placeholders::_1);
         case CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_HMAC_HMAC256:
-            return std::bind(&CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, HMAC<Streebog256, 32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, HMAC<Streebog256, 32>>, this, std::placeholders::_1);
         case CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_HMAC_HMAC512:
-            return std::bind(&CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, HMAC<Streebog512, 32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, HMAC<Streebog512, 32>>, this, std::placeholders::_1);
         case CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_HMAC_CMAC:
-            return std::bind(&CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, OMAC<Kuznechik>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, OMAC<Kuznechik>>, this, std::placeholders::_1);
         case CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_Simple_NMAC:
-            return std::bind(&CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, NMAC256<32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, NMAC256<32>>, this, std::placeholders::_1);
         case CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_Simple_HMAC256:
-            return std::bind(&CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, HMAC<Streebog256, 32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, HMAC<Streebog256, 32>>, this, std::placeholders::_1);
         case CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_Simple_HMAC512:
-            return std::bind(&CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, HMAC<Streebog512, 32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, HMAC<Streebog512, 32>>, this, std::placeholders::_1);
         case CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_Simple_CMAC:
-            return std::bind(&CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, OMAC<Kuznechik>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, OMAC<Kuznechik>>, this, std::placeholders::_1);
         case CryptographicSuites::KuznechikCTR_KuznechikCMAC_256_128_R13235651022_NMAC_NMAC:
-            return std::bind(&CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, NMAC256<32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, NMAC256<32>>, this, std::placeholders::_1);
         case CryptographicSuites::KuznechikCTR_KuznechikCMAC_256_128_R13235651022_NMAC_HMAC256:
-            return std::bind(&CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, HMAC<Streebog256, 32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, HMAC<Streebog256, 32>>, this, std::placeholders::_1);
         case CryptographicSuites::KuznechikCTR_KuznechikCMAC_256_128_R13235651022_NMAC_HMAC512:
-            return std::bind(&CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, HMAC<Streebog512, 32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, HMAC<Streebog512, 32>>, this, std::placeholders::_1);
         case CryptographicSuites::KuznechikCTR_KuznechikCMAC_256_128_R13235651022_NMAC_CMAC:
-            return std::bind(&CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, OMAC<Kuznechik>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<NMAC256<32>, OMAC<Kuznechik>>, this, std::placeholders::_1);
         case CryptographicSuites::KuznechikCTR_KuznechikCMAC_256_128_R13235651022_HMAC_NMAC:
-            return std::bind(&CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, NMAC256<32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, NMAC256<32>>, this, std::placeholders::_1);
         case CryptographicSuites::KuznechikCTR_KuznechikCMAC_256_128_R13235651022_HMAC_HMAC256:
-            return std::bind(&CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, HMAC<Streebog256, 32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, HMAC<Streebog256, 32>>, this, std::placeholders::_1);
         case CryptographicSuites::KuznechikCTR_KuznechikCMAC_256_128_R13235651022_HMAC_HMAC512:
-            return std::bind(&CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, HMAC<Streebog512, 32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, HMAC<Streebog512, 32>>, this, std::placeholders::_1);
         case CryptographicSuites::KuznechikCTR_KuznechikCMAC_256_128_R13235651022_HMAC_CMAC:
-            return std::bind(&CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, OMAC<Kuznechik>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<HMAC<Streebog512, 32>, OMAC<Kuznechik>>, this, std::placeholders::_1);
         case CryptographicSuites::KuznechikCTR_KuznechikCMAC_256_128_R13235651022_Simple_NMAC:
-            return std::bind(&CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, NMAC256<32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, NMAC256<32>>, this, std::placeholders::_1);
         case CryptographicSuites::KuznechikCTR_KuznechikCMAC_256_128_R13235651022_Simple_HMAC256:
-            return std::bind(&CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, HMAC<Streebog256, 32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, HMAC<Streebog256, 32>>, this, std::placeholders::_1);
         case CryptographicSuites::KuznechikCTR_KuznechikCMAC_256_128_R13235651022_Simple_HMAC512:
-            return std::bind(&CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, HMAC<Streebog512, 32>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, HMAC<Streebog512, 32>>, this, std::placeholders::_1);
         case CryptographicSuites::KuznechikCTR_KuznechikCMAC_256_128_R13235651022_Simple_CMAC:
-            return std::bind(&CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, OMAC<Kuznechik>>, this, std::placeholders::_1);
+            return std::bind(&CRISPMessenger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage<SimpleMAC<32>, OMAC<Kuznechik>>, this, std::placeholders::_1);
         default:
             throw std::invalid_argument("Данный криптографический набор не поддерживается.");
             break;
     }
 }
 
-void CRISPMessanger::send(std::string msg, bool is_file) {
+void CRISPMessenger::send(std::string msg, bool is_file) {
     static const std::vector<uint8_t> accept{'A', 'C', 'C', 'E', 'P', 'T'};
 
     std::vector<uint8_t> data;

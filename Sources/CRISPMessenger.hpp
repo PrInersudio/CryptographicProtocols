@@ -1,5 +1,5 @@
-#ifndef CRISP_MESSANGER_HPP
-#define CRISP_MESSANGER_HPP
+#ifndef CRISP_MESSENGER_HPP
+#define CRISP_MESSENGER_HPP
 
 #include <filesystem>
 #include "TCP.hpp"
@@ -11,7 +11,7 @@
 #include "SimpleMAC.hpp"
 #include "Utils.hpp"
 
-class CRISPMessanger {
+class CRISPMessenger {
 private:
     static constexpr uint8_t rng_personalization_string[] =
         { 'C', 'R', 'I', 'S', 'P', 'M', 'e', 's', 's', 'a', 'n', 'g', 'e', 'r'};
@@ -31,7 +31,7 @@ private:
 
     template <size_t EncryptionKeySize, size_t MacKeySize>
     struct KeyPair {
-        SecureBuffer<EncryptionKeySize> encription_key;
+        SecureBuffer<EncryptionKeySize> encryption_key;
         SecureBuffer<MacKeySize> mac_key;
     };
 
@@ -91,7 +91,7 @@ private:
         getKuznechikCTR_KuznechikCMAC_256_128_R13235651022Keys(keys, salt, user_info);
         if(!checkMAC_KuznechikCMAC_256_128_R13235651022(message, keys.mac_key))
             throw std::runtime_error("Нарушена целостность сообщения.");
-        return decryptKuznechikCTR(message.seq_num(), message.payload(), keys.encription_key);
+        return decryptKuznechikCTR(message.seq_num(), message.payload(), keys.encryption_key);
     }
 
     template <IsMAC InnerMAC, IsMAC OuterMAC>
@@ -114,7 +114,7 @@ private:
         tcp(crisp_message_bytes);
     }
 public:
-    CRISPMessanger(
+    CRISPMessenger(
         const uint16_t local_port,
         const std::string &remote_ip,
         const uint16_t remote_port,
@@ -130,7 +130,7 @@ public:
 
 template <IsMAC InnerMAC, IsMAC OuterMAC>
 requires (InnerMAC::DigestSize >= OuterMAC::KeySize)
-void CRISPMessanger::getKuznechikCMAC_256_128_R13235651022MacKey(SecureBuffer<32> &mac_key, const SecureBuffer<32> &salt, const uint8_t (&user_info)[16]) const noexcept {
+void CRISPMessenger::getKuznechikCMAC_256_128_R13235651022MacKey(SecureBuffer<32> &mac_key, const SecureBuffer<32> &salt, const uint8_t (&user_info)[16]) const noexcept {
     KDF_R_13235651022<InnerMAC, OuterMAC, 32> kdf(master_key_, salt);
     uint8_t IV[OuterMAC::DigestSize];
     uint64_t temp = message.seqNum();
@@ -143,7 +143,7 @@ void CRISPMessanger::getKuznechikCMAC_256_128_R13235651022MacKey(SecureBuffer<32
 
 template <IsMAC InnerMAC, IsMAC OuterMAC>
 requires (InnerMAC::DigestSize >= OuterMAC::KeySize)
-void CRISPMessanger::getKuznechikCTR_KuznechikCMAC_256_128_R13235651022Keys(KeyPair<32, 32> &keys, const SecureBuffer<32> &salt, const uint8_t (&user_info)[16]) const noexcept {
+void CRISPMessenger::getKuznechikCTR_KuznechikCMAC_256_128_R13235651022Keys(KeyPair<32, 32> &keys, const SecureBuffer<32> &salt, const uint8_t (&user_info)[16]) const noexcept {
     KDF_R_13235651022<InnerMAC, OuterMAC, 32> kdf(master_key_, salt);
     uint8_t IV[OuterMAC::DigestSize];
     uint64_t temp = message.seqNum();
@@ -152,7 +152,7 @@ void CRISPMessanger::getKuznechikCTR_KuznechikCMAC_256_128_R13235651022Keys(KeyP
         temp >>= 8;
     }
     kdf.fetch(keys.mac_key.raw(), 32, IV, kdf_mac_application_info, user_info, kdf_additional_info);
-    kdf.fetch(keys.encription_key.raw(), 32, IV, kdf_key_application_info, user_info, kdf_additional_info);
+    kdf.fetch(keys.encryption_key.raw(), 32, IV, kdf_key_application_info, user_info, kdf_additional_info);
 }
 
 inline bool checkMAC_KuznechikCMAC_256_128_R13235651022(const CRISPMessage &message, const SecureBuffer<32> &mac_key) {
@@ -178,7 +178,7 @@ inline static std::string sanitizeFilename(const std::string& raw) {
 
 template <IsMAC InnerMAC, IsMAC OuterMAC>
 requires (InnerMAC::DigestSize >= OuterMAC::KeySize)
-CRISPMessage CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage(const MessageParts &message) const {
+CRISPMessage CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage(const MessageParts &message) const {
     static constexpr uint8_t rng_additional_info[] = {
         'C', 'R', 'I', 'S', 'P', 'M', 'e', 's',
         's', 'a', 'n', 'g', 'e', 'r', ':', ':',
@@ -207,7 +207,7 @@ CRISPMessage CRISPMessanger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMes
 
 template <IsMAC InnerMAC, IsMAC OuterMAC>
 requires (InnerMAC::DigestSize >= OuterMAC::KeySize)
-CRISPMessage CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage(const MessageParts &message) const {
+CRISPMessage CRISPMessenger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022CRISPMessage(const MessageParts &message) const {
     static constexpr uint8_t rng_additional_info[] = {
         'f', 'o', 'r', 'm', 'K', 'u', 'z', 'n',
         'e', 'c', 'h', 'i', 'k', 'C', 'T', 'R',
@@ -224,7 +224,7 @@ CRISPMessage CRISPMessanger::formKuznechikCTR_KuznechikCMAC_256_128_R13235651022
     KeyPair<32, 32> keys;
     getKuznechikCTR_KuznechikCMAC_256_128_R13235651022Keys<InnerMAC, OuterMAC>(keys, salt, local_user_info_);
 
-    std::vector<uint8_t> payload = encryptKuznechikCTR(message.seq_num, message.part, keys.encription_key);
+    std::vector<uint8_t> payload = encryptKuznechikCTR(message.seq_num, message.part, keys.encryption_key);
     OMAC<Kuznechik> macer(keys.mac_key);
     macer.update(message.part);
 
