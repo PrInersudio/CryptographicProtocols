@@ -39,7 +39,7 @@ CRISPMessenger::CRISPMessenger(
     static const std::vector<uint8_t> error{'E', 'R', 'R', 'O', 'R'};
     static constexpr uint8_t rng_additional_info[] = {
         'C', 'R', 'I', 'S', 'P', 'M', 'e', 's',
-        's', 'a', 'n', 'g', 'e', 'r', ' ', 'c',
+        's', 'e', 'n', 'g', 'e', 'r', ' ', 'c',
         'o', 'n', 's', 't', 'r', 'u', 'c', 't',
         'o', 'r', 't', 'e', 's', 't', ' ', 'm',
         'e', 's', 's', 'a', 'g', 'e', '.'
@@ -141,7 +141,7 @@ CRISPMessenger::MessageParts CRISPMessenger::getMessage(const TCP &tcp) const {
 std::string CRISPMessenger::recv() {
     static constexpr uint8_t rng_additional_info[] = {
         'C', 'R', 'I', 'S', 'P', 'M', 'e', 's',
-        's', 'a', 'n', 'g', 'e', 'r', ' ', 'f',
+        's', 'e', 'n', 'g', 'e', 'r', ' ', 'f',
         'i', 'l', 'e', 'n', 'a', 'm', 'e', ' ',
         'r', 'a', 'n', 'd', 'o', 'm', ' ', 'a',
         'd', 'd', '.'

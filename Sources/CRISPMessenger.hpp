@@ -14,16 +14,16 @@
 class CRISPMessenger {
 private:
     static constexpr uint8_t rng_personalization_string[] =
-        { 'C', 'R', 'I', 'S', 'P', 'M', 'e', 's', 's', 'a', 'n', 'g', 'e', 'r'};
+        { 'C', 'R', 'I', 'S', 'P', 'M', 'e', 's', 's', 'e', 'n', 'g', 'e', 'r'};
     static constexpr uint8_t kdf_mac_application_info[] = {
             'C', 'R', 'I', 'S', 'P', 'M', 'e', 's',
-            's', 'a', 'n', 'g', 'e', 'r', ' ', 'k',
+            's', 'e', 'n', 'g', 'e', 'r', ' ', 'k',
             'e', 'y', ' ', 'f', 'o', 'r', ' ', 'M',
             'A', 'C', ' ', 'd', 'i', 'g', 'e', 's',
     };
     static constexpr uint8_t kdf_key_application_info[] = {
             'C', 'R', 'I', 'S', 'P', 'M', 'e', 's',
-            's', 'a', 'n', 'g', 'e', 'r', ' ', 'k',
+            's', 'e', 'n', 'g', 'e', 'r', ' ', 'k',
             'e', 'y', ' ', 'f', 'o', 'r', ' ', 'e',
             'n', 'c', 'r', 'y', 'p', 't', 'i', 'o ',
     };
@@ -51,7 +51,7 @@ private:
     MessageFormer formMessage;
     CTR_DRBG<Kuznechik, true> rng;
     uint64_t client_seq_num_;
-    SecureBuffer<32> master_key_;
+    MasterKeySecureBuffer<32> master_key_;
     uint8_t local_user_info_[16];
     uint8_t remote_user_info_[16];
     const std::filesystem::path directory_;
@@ -181,7 +181,7 @@ requires (InnerMAC::DigestSize >= OuterMAC::KeySize)
 CRISPMessage CRISPMessenger::formNULL_KuznechikCMAC_256_128_R13235651022CRISPMessage(const MessageParts &message) const {
     static constexpr uint8_t rng_additional_info[] = {
         'C', 'R', 'I', 'S', 'P', 'M', 'e', 's',
-        's', 'a', 'n', 'g', 'e', 'r', ':', ':',
+        's', 'e', 'n', 'g', 'e', 'r', ':', ':',
         'f', 'o', 'r', 'm', 'N', 'U', 'L', 'L',
         '_', 'K', 'u', 'z', 'n', 'e', 'c', 'h',
         'i', 'k', 'C', 'M', 'A', 'C', '_', '2',
