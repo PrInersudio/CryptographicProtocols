@@ -1,11 +1,13 @@
 /*  Тесты с маленькими ключами взяты из Р 50.1.113.
-    Тесты с большими ключами сгенерирваны с помощью
+    Тесты с большими ключами сгенерированы с помощью
     OpenSSL 3.5.0 c GostEngine 3.0.3.r760.e0a500a-1.
 */
 #include <gtest/gtest.h>
 #include <iomanip>
 #include "HMAC.hpp"
 #include "Streebog.hpp"
+
+INITIALIZE_EASYLOGGINGPP
 
 template <size_t N>
 void PrintTo(const SecureBuffer<N> &buf, std::ostream* os) {

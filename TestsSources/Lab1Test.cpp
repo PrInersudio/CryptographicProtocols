@@ -6,7 +6,14 @@
 #include "OMAC.hpp"
 #include "OpenSSLKuznechikOMAC.hpp"
 
+INITIALIZE_EASYLOGGINGPP
+
 #define TestFilesFolder "../TestsData/"
+
+struct LogConfer {
+    LogConfer() { confLog(); }
+};
+LogConfer confer;
 
 namespace RandKeyGenerator {
     // Не криптостойкий ГСЧ используется только в рамках тестирования.

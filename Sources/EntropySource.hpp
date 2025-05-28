@@ -22,6 +22,7 @@ public:
         urandom.read(reinterpret_cast<char *>(entropy.raw()), SeedLen);
         if (!urandom)
             throw std::runtime_error("Не удалось получить энтропию из /dev/urandom.");
+        LOG(INFO) << "Обращение к urandom.";
         return entropy;
     }
 };

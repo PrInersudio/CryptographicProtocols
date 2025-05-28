@@ -30,10 +30,7 @@ CRISPMessage::CRISPMessage(const std::vector<uint8_t> &message) {
 }
 
 std::vector<uint8_t> CRISPMessage::serialize() const noexcept {
-    std::vector<uint8_t> message(
-        2 + 1 + 1 + (key_id_.size == 1 ? 0 : key_id_.size) +
-        6 + payload_.size() + ICV_.size()
-    );
+    std::vector<uint8_t> message(precalcSize(payload_.size(), key_id_.size, cryptographic_suite_));
     message[0] = static_cast<uint8_t>(verison_ >> 8);
     message[1] = static_cast<uint8_t>(verison_ & 0xFF);
     if (external_key_id_flag_) message[0] |= 0x80;
@@ -53,4 +50,16 @@ std::vector<uint8_t> CRISPMessage::serialize() const noexcept {
     std::copy(ICV_.begin(), ICV_.end(),
         message.end() - static_cast<diff_type>(ICV_.size()));
     return message;
+}
+
+size_t CRISPMessage::precalcSizeWithoutPayload(
+    const size_t key_id_size,
+    const CryptographicSuites cryptographic_suite
+) noexcept {
+    return 2 // ExternalKeyldFlag + Version
+        + 1 // CS
+        + 1 // KeyID info byte
+        + (key_id_size == 1 ? 0 : key_id_size) // KeyID other bytes
+        + 6 // SeqNum
+        + getICVLength(cryptographic_suite); // ICV
 }

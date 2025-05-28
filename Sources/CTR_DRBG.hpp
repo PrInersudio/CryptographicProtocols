@@ -74,6 +74,19 @@ public:
         const uint8_t *additional_input = nullptr,
         const size_t additional_input_len = 0
     );
+    inline uint64_t uint64(
+        const uint8_t *additional_input = nullptr,
+        const size_t additional_input_len = 0
+    ) {
+        uint64_t result;
+        if constexpr (AutoReseed)
+            (*this)(reinterpret_cast<uint8_t *>(&result), 8, additional_input, additional_input_len);
+        else {
+            if ((*this)(reinterpret_cast<uint8_t *>(&result), 8, additional_input, additional_input_len))
+                throw std::runtime_error("Необходимо пересеевание для генерации случайного числа.");
+        }
+        return result;
+    }
 };
 
 template <IsCipher CipherType, bool AutoReseed, IsEntropySource<CipherType::BlockSize + CipherType::KeySize> EntropySourceType>

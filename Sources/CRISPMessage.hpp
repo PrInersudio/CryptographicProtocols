@@ -36,15 +36,27 @@ public:
         { return verison_; }
     inline CryptographicSuites cryptographicSuite() const noexcept
         { return cryptographic_suite_; }
-    inline const KeyID& keyID() const noexcept
+    inline const KeyID &keyID() const noexcept
         { return key_id_; }
     inline uint64_t seqNum() const noexcept
         { return seq_num_; }
-    inline const std::vector<uint8_t>& payload() const noexcept
+    inline const std::vector<uint8_t> &payload() const noexcept
         { return payload_; }
-    inline const std::vector<uint8_t>& ICV() const noexcept
+    inline const std::vector<uint8_t> &ICV() const noexcept
         { return ICV_; }
-    inline bool operator==(const CRISPMessage&) const = default;
+    inline bool operator==(const CRISPMessage&) const noexcept = default;
+    inline bool operator<(const CRISPMessage &other) const noexcept { return seq_num_ < other.seq_num_; }
+
+    static size_t precalcSizeWithoutPayload(
+        const size_t key_id_size,
+        const CryptographicSuites cryptographic_suite
+    ) noexcept;
+    inline static size_t precalcSize(
+        const size_t payload_size,
+        const size_t key_id_size,
+        const CryptographicSuites cryptographic_suite
+    ) noexcept { return precalcSizeWithoutPayload(key_id_size, cryptographic_suite) + payload_size; }
+    static constexpr size_t MaxSize = 2048;
 private:
     bool external_key_id_flag_;
     uint16_t verison_;

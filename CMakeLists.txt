@@ -84,20 +84,22 @@ endif()
 add_library(Kuznechik OBJECT ${SOURCES_DIR}/Kuznechik.cpp)
 add_library(Utils OBJECT ${SOURCES_DIR}/Utils.cpp)
 add_library(Streebog OBJECT ${SOURCES_DIR}/Streebog.cpp)
-add_library(CryptographicSuites OBJECT ${SOURCES_DIR}/CryptographicSuites.cpp)
 add_library(CRISPMessage OBJECT ${SOURCES_DIR}/CRISPMessage.cpp)
+add_library(easylogging OBJECT /usr/include/easylogging++.cc)
+target_compile_definitions(easylogging PUBLIC ELPP_NO_DEFAULT_LOG_FILE)
+target_compile_options(easylogging PRIVATE -w)
 
 # Сборка программ.
 add_executable(lab1 ${SOURCES_DIR}/Lab1Main.cpp)
-target_link_libraries(lab1 PRIVATE Kuznechik Utils)
+target_link_libraries(lab1 PRIVATE Kuznechik Utils easylogging)
 
 add_executable(lab2 ${SOURCES_DIR}/Lab2Main.cpp)
-target_link_libraries(lab2 PRIVATE Streebog Kuznechik Utils)
+target_link_libraries(lab2 PRIVATE Streebog Kuznechik Utils easylogging)
 
 find_package(TBB REQUIRED)
 
 add_executable(lab3 ${SOURCES_DIR}/Lab3Main.cpp)
-target_link_libraries(lab3 PRIVATE Kuznechik TBB::tbb)
+target_link_libraries(lab3 PRIVATE Kuznechik TBB::tbb easylogging)
 
 # Сборка тестов.
 if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
@@ -106,37 +108,37 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
     enable_testing()
     
     add_executable(SecureBufferTest ${TESTS_SOURCES_DIR}/SecureBufferTest.cpp)
-    target_link_libraries(SecureBufferTest PRIVATE GTest::GTest)
+    target_link_libraries(SecureBufferTest PRIVATE GTest::GTest easylogging)
     add_test(NAME SecureBufferTest COMMAND SecureBufferTest)
     set_tests_properties(SecureBufferTest PROPERTIES LABELS "Lab1")
     
     add_executable(KuznechikTest ${TESTS_SOURCES_DIR}/KuznechikTest.cpp)
-    target_link_libraries(KuznechikTest PRIVATE Kuznechik GTest::GTest)
+    target_link_libraries(KuznechikTest PRIVATE Kuznechik GTest::GTest easylogging)
     add_test(NAME KuznechikTest COMMAND KuznechikTest)
     set_tests_properties(KuznechikTest PROPERTIES LABELS "Lab1")
 
     add_executable(OMACTest ${TESTS_SOURCES_DIR}/OMACTest.cpp)
-    target_link_libraries(OMACTest PRIVATE Kuznechik GTest::GTest)
+    target_link_libraries(OMACTest PRIVATE Kuznechik GTest::GTest easylogging)
     add_test(NAME OMACTest COMMAND OMACTest)
     set_tests_properties(OMACTest PROPERTIES LABELS "Lab1")
 
     add_executable(UtilsTest ${TESTS_SOURCES_DIR}/UtilsTest.cpp)
-    target_link_libraries(UtilsTest PRIVATE Utils Kuznechik GTest::GTest)
+    target_link_libraries(UtilsTest PRIVATE Utils Kuznechik GTest::GTest easylogging)
     add_test(NAME UtilsTest COMMAND UtilsTest)
     set_tests_properties(UtilsTest PROPERTIES LABELS "Lab1")
 
     add_executable(StreebogTest ${TESTS_SOURCES_DIR}/StreebogTest.cpp)
-    target_link_libraries(StreebogTest PRIVATE Streebog GTest::GTest)
+    target_link_libraries(StreebogTest PRIVATE Streebog GTest::GTest easylogging)
     add_test(NAME StreebogTest COMMAND StreebogTest)
     set_tests_properties(StreebogTest PROPERTIES LABELS "Lab2")
 
     add_executable(HMACTest ${TESTS_SOURCES_DIR}/HMACTest.cpp)
-    target_link_libraries(HMACTest PRIVATE Streebog GTest::GTest)
+    target_link_libraries(HMACTest PRIVATE Streebog GTest::GTest easylogging)
     add_test(NAME HMACTest COMMAND HMACTest)
     set_tests_properties(HMACTest PROPERTIES LABELS "Lab2")
 
     add_executable(SimpleMACTest ${TESTS_SOURCES_DIR}/SimpleMACTest.cpp)
-    target_link_libraries(SimpleMACTest PRIVATE GTest::GTest)
+    target_link_libraries(SimpleMACTest PRIVATE GTest::GTest easylogging)
     add_test(NAME SimpleMACTest COMMAND SimpleMACTest)
     set_tests_properties(SimpleMACTest PROPERTIES LABELS "Lab2")
 
@@ -160,40 +162,40 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
         add_library(OpenSSLKuznechikOMAC OBJECT ${SOURCES_DIR}/OpenSSLKuznechikOMAC.cpp)
 
         add_executable(NMAC256Test ${TESTS_SOURCES_DIR}/NMAC256Test.cpp)
-        target_link_libraries(NMAC256Test PRIVATE Streebog OpenSSL::SSL OpenSSL::Crypto GTest::GTest)
+        target_link_libraries(NMAC256Test PRIVATE Streebog OpenSSL::SSL OpenSSL::Crypto GTest::GTest easylogging)
         add_test(NAME NMAC256Test COMMAND NMAC256Test)
         set_tests_properties(NMAC256Test PROPERTIES LABELS "Lab2")
 
         add_executable(KDF_R_13235651022Test ${TESTS_SOURCES_DIR}/KDF_R_13235651022Test.cpp)
-        target_link_libraries(KDF_R_13235651022Test PRIVATE Streebog Kuznechik OpenSSLKuznechikOMAC OpenSSL::SSL OpenSSL::Crypto GTest::GTest)
+        target_link_libraries(KDF_R_13235651022Test PRIVATE Streebog Kuznechik OpenSSLKuznechikOMAC OpenSSL::SSL OpenSSL::Crypto GTest::GTest easylogging)
         add_test(NAME KDF_R_13235651022Test COMMAND KDF_R_13235651022Test)
         set_tests_properties(KDF_R_13235651022Test PROPERTIES LABELS "Lab2")
 
         add_executable(CTR_DRBGTest ${TESTS_SOURCES_DIR}/CTR_DRBGTest.cpp)
-        target_link_libraries(CTR_DRBGTest PRIVATE OpenSSL::SSL OpenSSL::Crypto GTest::GTest TBB::tbb)
+        target_link_libraries(CTR_DRBGTest PRIVATE OpenSSL::SSL OpenSSL::Crypto GTest::GTest TBB::tbb easylogging)
         add_test(NAME CTR_DRBGTest COMMAND CTR_DRBGTest)
         set_tests_properties(CTR_DRBGTest PROPERTIES LABELS "Lab3")
 
         add_executable(CTRTest ${TESTS_SOURCES_DIR}/CTRTest.cpp)
-        target_link_libraries(CTRTest PRIVATE Kuznechik GTest::GTest TBB::tbb)
+        target_link_libraries(CTRTest PRIVATE Kuznechik GTest::GTest TBB::tbb easylogging)
         add_test(NAME CTRTest COMMAND CTRTest)
         set_tests_properties(CTRTest PROPERTIES LABELS "Lab4")
 
         add_executable(CRISPMessageTest ${TESTS_SOURCES_DIR}/CRISPMessageTest.cpp)
-        target_link_libraries(CRISPMessageTest PRIVATE CryptographicSuites CRISPMessage GTest::GTest)
+        target_link_libraries(CRISPMessageTest PRIVATE CRISPMessage GTest::GTest)
         add_test(NAME CRISPMessageTest COMMAND CRISPMessageTest)
         set_tests_properties(CRISPMessageTest PROPERTIES LABELS "Lab4")
 
         find_package(benchmark REQUIRED)
 
         add_executable(Lab1Test ${TESTS_SOURCES_DIR}/Lab1Test.cpp)
-        target_link_libraries(Lab1Test PRIVATE OpenSSL::SSL OpenSSL::Crypto Utils Kuznechik OpenSSLKuznechikOMAC benchmark::benchmark)
+        target_link_libraries(Lab1Test PRIVATE OpenSSL::SSL OpenSSL::Crypto Utils Kuznechik OpenSSLKuznechikOMAC benchmark::benchmark easylogging)
 
         add_executable(Lab2Test ${TESTS_SOURCES_DIR}/Lab2Test.cpp)
-        target_link_libraries(Lab2Test PRIVATE OpenSSL::SSL OpenSSL::Crypto Streebog Kuznechik OpenSSLKuznechikOMAC benchmark::benchmark)
+        target_link_libraries(Lab2Test PRIVATE OpenSSL::SSL OpenSSL::Crypto Streebog Kuznechik OpenSSLKuznechikOMAC benchmark::benchmark easylogging)
 
         add_executable(Lab3Test ${TESTS_SOURCES_DIR}/Lab3Test.cpp)
-        target_link_libraries(Lab3Test PRIVATE Kuznechik benchmark::benchmark TBB::tbb)
+        target_link_libraries(Lab3Test PRIVATE Kuznechik benchmark::benchmark TBB::tbb easylogging)
 
     endif()
 

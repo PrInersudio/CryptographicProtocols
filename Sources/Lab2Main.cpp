@@ -6,6 +6,8 @@
 #include "KDF_R_13235651022.hpp"
 #include "Utils.hpp"
 
+INITIALIZE_EASYLOGGINGPP
+
 enum class InnerMACVariants { NMAC = 0, HMAC = 1, Simple = 2 };
 enum class OuterMACVariants { NMAC = 0, HMAC256 = 1, HMAC512 = 2, CMAC = 3 };
 
@@ -33,19 +35,8 @@ void getMacParams(
     const Params &params,
     SecureBuffer<16> &expected_mac
 ) {
-    uint64_t timestamp;
-    SecureBuffer<32> key;
-    std::ifstream file(params.key_file, std::ios::binary);
-    if (!file) throw std::runtime_error("Не удалось открыть файл ключа.");
-    file.read(reinterpret_cast<char *>(&timestamp), 8);
-    if (!file) throw std::runtime_error("Ошибка чтения временной метки из файла ключа.");
-    #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-    timestamp = __builtin_bswap64(timestamp);
-    #endif
-    file.read(reinterpret_cast<char *>(key.raw()), 32);
-    if (!file) throw std::runtime_error("Ошибка чтения ключа из файла.");
-    file.close();
-    checkTimestamp(timestamp);
+    MasterKeySecureBuffer<32> key;
+    getAndCheckKey(params.key_file.c_str(), key);
     std::ifstream mac_params_source;
     if (!params.mac_file.empty()) {
         mac_params_source.open(params.mac_file, std::ios::binary);
@@ -265,6 +256,7 @@ int getOrCheckFileMac(const Params &params) {
 }
 
 int main(int argc, char **argv) {
+    confLog(true);
     Params params;
     if (getParams(params, argc, argv))
         return -1;

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <functional>
 #include <random>
+#include <easylogging++.h>
 
 template <size_t N>
 class SecureBuffer {
@@ -19,20 +20,19 @@ public:
     inline SecureBuffer(const SecureBuffer &original) : SecureBuffer()
         { memcpy(data_, original.data_, N); }
     inline SecureBuffer(SecureBuffer &&original) : SecureBuffer()
-        { memcpy(data_, original.data_, N); original.zero(); }
+        { memcpy(data_, original.data_, N); }
     inline SecureBuffer(const uint8_t (&data)[N]) : SecureBuffer()
         { memcpy(data_, data, N); }
     inline SecureBuffer(uint8_t (&&data)[N]) : SecureBuffer()
-        { memcpy(data_, data, N); memset(data, 0, N); }
+        { memcpy(data_, data, N); }
     inline SecureBuffer& operator=(const SecureBuffer &original) noexcept
         { if (this != &original) memcpy(data_, original.data_, N); return *this; }
     inline SecureBuffer& operator=(SecureBuffer &&original) noexcept
-        { if (this != &original) { memcpy(data_, original.data_, N); original.zero(); } 
-            return *this; }
+        { if (this != &original) memcpy(data_, original.data_, N);  return *this; }
     inline SecureBuffer& operator=(const uint8_t (&data)[N]) noexcept
         { memcpy(data_, data, N); return *this; }
     inline SecureBuffer& operator=(uint8_t (&&data)[N]) noexcept
-        { memcpy(data_, data, N); memset(data, 0, N); return *this; }
+        { memcpy(data_, data, N); return *this; }
     ~SecureBuffer() noexcept;
     inline uint8_t &operator[](const size_t i) noexcept { return data_[i]; }
     inline const uint8_t &operator[](const size_t i) const noexcept { return data_[i]; }
@@ -202,5 +202,14 @@ struct SecureBuffer<N>::ConstIterator {
 private:
     pointer ptr_;
 };
+
+template<size_t N>
+struct MasterKeySecureBuffer : public SecureBuffer<N> {
+    inline MasterKeySecureBuffer() : SecureBuffer<N>() {}
+    inline ~MasterKeySecureBuffer() noexcept {
+        LOG(INFO) << "Введённая ключевая информация удалена из памяти.";
+    }
+};
+
 
 #endif

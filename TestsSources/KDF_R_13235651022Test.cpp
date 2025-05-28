@@ -15,6 +15,8 @@
 #include "SimpleMAC.hpp"
 #include "KDF_R_13235651022.hpp"
 
+INITIALIZE_EASYLOGGINGPP
+
 template <size_t N>
 void PrintTo(const SecureBuffer<N> &buf, std::ostream* os) {
     *os << std::hex << std::uppercase << std::setfill('0');

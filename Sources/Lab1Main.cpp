@@ -3,7 +3,10 @@
 #include "OMAC.hpp"
 #include "Utils.hpp"
 
+INITIALIZE_EASYLOGGINGPP
+
 int main(int argc, char **argv) {
+    confLog(true);
     if (argc < 3) {
         std::cout << "Запускать: " << argv[0] << " <файл_ключа> <файл_с_текстом> [ожидаемый MAC в hex]" << std::endl;
         return -1;

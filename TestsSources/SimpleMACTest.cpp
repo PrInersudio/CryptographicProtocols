@@ -2,6 +2,8 @@
 #include <array>
 #include "SimpleMAC.hpp"
 
+INITIALIZE_EASYLOGGINGPP
+
 TEST(SimpleMACTest, FullBlocks) {
     SecureBuffer<32> key;
     std::fill(key.begin(), key.end(), 0xAA);

@@ -4,6 +4,8 @@
 #include "Kuznechik.hpp"
 #include "CTR.hpp"
 
+INITIALIZE_EASYLOGGINGPP
+
 TEST(CTR, Encrypt) {
     uint8_t plain_text[] = {
         0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x00,

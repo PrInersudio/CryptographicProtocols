@@ -1,10 +1,18 @@
 #include <benchmark/benchmark.h>
 #include "Kuznechik.hpp"
 #include "CTR_DRBG.hpp"
+#include "Utils.hpp"
+
+INITIALIZE_EASYLOGGINGPP
 
 #define BUFFER_SIZE 65536
 #define KEY_SIZE 32
 #define TestFilesFolder "../TestsData/"
+
+struct LogConfer {
+    LogConfer() { confLog(); }
+};
+LogConfer confer;
 
 static void Random1MB(benchmark::State& state) {
     static constexpr std::string filename = "Random1M.bin";

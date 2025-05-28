@@ -4,6 +4,8 @@
 #include <iomanip>
 #include "CTR_DRBG.hpp"
 
+INITIALIZE_EASYLOGGINGPP
+
 class OpenSSLAES256 : public Cipher<16, 32> {
 private:
     SecureBuffer<32> key_;
@@ -354,6 +356,13 @@ TEST(CTRDRBGTest, NoPersonalizationStringNoAdditionalInput) {
             << "Результат: " << toHex(buffer) << "\n"
             << "Ожидается: " << toHex(NoPersonalizationStringNoAdditionalInput_results[i]);
     }
+}
+
+TEST(CTRDRBGTest, UINT64NoPersonalizationStringNoAdditionalInput) {
+    CTR_DRBG<OpenSSLAES256, false, NoPersonalizationStringNoAdditionalInputEntropySource> rng;
+    std::array<uint8_t, 64> buffer;
+    rng(buffer.data(), 64);
+    EXPECT_EQ(rng.uint64(), std::endian::native == std::endian::big ? 0xd1c07cd95af8a7f1 : 0xf1a7f85ad97cc0d1);
 }
 
 class NoPersonalizationStringAdditionalInputEntropySource : EntropySource<48> {
@@ -895,6 +904,14 @@ TEST(CTRDRBGTest, NoPersonalizationStringAdditionalInput) {
     }
 }
 
+TEST(CTRDRBGTest, UINT64NoPersonalizationStringAdditionalInput) {
+    CTR_DRBG<OpenSSLAES256, false, NoPersonalizationStringAdditionalInputEntropySource> rng;
+    std::array<uint8_t, 64> buffer;
+    rng(buffer.data(), 64, NoPersonalizationStringAdditionalInput_additional_inputs[0], 48);
+    EXPECT_EQ(rng.uint64(NoPersonalizationStringAdditionalInput_additional_inputs[1], 48),
+        std::endian::native == std::endian::big ? 0x4f11406bd303c104 : 0x04c103d36b40114f);
+}
+
 class PersonalizationStringNoAdditionalInputEntropySource : EntropySource<48> {
 public:
     inline SecureBuffer<48> operator ()() const noexcept override {
@@ -1314,6 +1331,15 @@ TEST(CTRDRBGTest, PersonalizationStringNoAdditionalInput) {
             << "Результат: " << toHex(buffer) << "\n"
             << "Ожидается: " << toHex(PersonalizationStringNoAdditionalInput_results[i]);
     }
+}
+
+TEST(CTRDRBGTest, UINT64PersonalizationStringNoAdditionalInput) {
+    CTR_DRBG<OpenSSLAES256, false, PersonalizationStringNoAdditionalInputEntropySource> rng(
+        PersonalizationStringNoAdditionalInput_personalization_strings[0], 48
+    );
+    std::array<uint8_t, 64> buffer;
+    rng(buffer.data(), 64);
+    EXPECT_EQ(rng.uint64(), std::endian::native == std::endian::big ? 0xf7fab6a6fcf445f0 : 0xf045f4fca6b6faf7);
 }
 
 class PersonalizationStringAdditionalInputEntropySource : EntropySource<48> {
@@ -1979,6 +2005,16 @@ TEST(CTRDRBGTest, PersonalizationStringAdditionalInput) {
     }
 }
 
+TEST(CTRDRBGTest, UINT64PersonalizationStringAdditionalInput) {
+    CTR_DRBG<OpenSSLAES256, false, PersonalizationStringAdditionalInputEntropySource> rng(
+        PersonalizationStringAdditionalInput_personalization_strings[0], 48
+    );
+    std::array<uint8_t, 64> buffer;
+    rng(buffer.data(), 64, PersonalizationStringAdditionalInput_additional_inputs[0], 48);
+    EXPECT_EQ(rng.uint64(PersonalizationStringAdditionalInput_additional_inputs[1], 48),
+        std::endian::native == std::endian::big ? 0x6808268b13e236f6 : 0xf636e2138b260868);
+}
+
 class ReseedEntropySource : EntropySource<48> {
 public:
     inline SecureBuffer<48> operator ()() const noexcept override {
@@ -2395,6 +2431,14 @@ TEST(CTRDRBGTest, Reseed) {
             << "Результат: " << toHex(buffer) << "\n"
             << "Ожидается: " << toHex(Reseed_results[i]);
     }
+}
+
+TEST(CTRDRBGTest, UINT64Reseed) {
+    CTR_DRBG<OpenSSLAES256, false, ReseedEntropySource> rng;
+    rng.reseed();
+    std::array<uint8_t, 64> buffer;
+    rng(buffer.data(), 64);
+    EXPECT_EQ(rng.uint64(), std::endian::native == std::endian::big ? 0xb2cb8905c05e5950 : 0x50595ec00589cbb2);
 }
 
 TEST(CTRDRBGTest, MaxBytesPerRequestExceed) {

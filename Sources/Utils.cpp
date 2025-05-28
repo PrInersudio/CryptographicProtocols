@@ -36,9 +36,8 @@ void checkTimestamp(const uint64_t timestamp_raw) noexcept {
             << std::endl;
 }
 
-void initKuznechikOMACCTX(OMAC<Kuznechik> &ctx, const char *filename) {
+void getAndCheckKey(const char *filename, MasterKeySecureBuffer<32> &key) {
     uint64_t timestamp;
-    SecureBuffer<32> key;
     std::ifstream file(filename, std::ios::binary);
     if (!file) throw std::runtime_error("Не удалось открыть файл ключа.");
     file.read(reinterpret_cast<char *>(&timestamp), 8);
@@ -48,7 +47,13 @@ void initKuznechikOMACCTX(OMAC<Kuznechik> &ctx, const char *filename) {
     #endif
     file.read(reinterpret_cast<char *>(key.raw()), 32);
     if (!file) throw std::runtime_error("Ошибка чтения ключа из файла.");
+    LOG(INFO) << "Введена ключевая информация";
     checkTimestamp(timestamp);
+}
+
+void initKuznechikOMACCTX(OMAC<Kuznechik> &ctx, const char *filename) {
+    MasterKeySecureBuffer<32> key;
+    getAndCheckKey(filename, key);
     ctx.initKeySchedule(key);
 }
 

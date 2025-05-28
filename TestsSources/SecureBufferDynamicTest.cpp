@@ -4,6 +4,8 @@
 #include <sstream>
 #include <iomanip>
 
+INITIALIZE_EASYLOGGINGPP
+
 int main() {
     {
         SecureBuffer<16> buf;

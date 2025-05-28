@@ -5,6 +5,8 @@
 #endif
 #include "Utils.hpp"
 
+INITIALIZE_EASYLOGGINGPP
+
 TEST(CheckTimestampTest, ValidTimestamp) {
     testing::internal::CaptureStdout();
     const uint64_t timestamp = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::seconds>(

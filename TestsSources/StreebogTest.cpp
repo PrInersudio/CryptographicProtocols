@@ -5,6 +5,8 @@
 #include "Streebog.hpp"
 #include <iomanip>
 
+INITIALIZE_EASYLOGGINGPP
+
 template <size_t N>
 void PrintTo(const SecureBuffer<N> &buf, std::ostream* os) {
     *os << std::hex << std::uppercase << std::setfill('0');

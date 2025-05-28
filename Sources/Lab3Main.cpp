@@ -3,8 +3,10 @@
 #include <iomanip>
 #include "Kuznechik.hpp"
 #include "CTR_DRBG.hpp"
+#include "Utils.hpp"
 
-#define BUFFER_SIZE 65536
+INITIALIZE_EASYLOGGINGPP
+
 #define BAR_WIDTH 50
 
 struct Params {
@@ -106,6 +108,7 @@ void printProgress(size_t current, size_t total) {
 }
 
 int main(int argc, char **argv) {
+    confLog(true);
     Params params;
     if (getParams(params, argc, argv)) return -1;
     try {
