@@ -88,6 +88,8 @@ add_library(CRISPMessage OBJECT ${SOURCES_DIR}/CRISPMessage.cpp)
 add_library(easylogging OBJECT /usr/include/easylogging++.cc)
 target_compile_definitions(easylogging PUBLIC ELPP_NO_DEFAULT_LOG_FILE)
 target_compile_options(easylogging PRIVATE -w)
+add_library(CRISPMessenger OBJECT ${SOURCES_DIR}/CRISPMessenger.cpp)
+add_library(TCP OBJECT ${SOURCES_DIR}/TCP.cpp)
 
 # Сборка программ.
 add_executable(lab1 ${SOURCES_DIR}/Lab1Main.cpp)
@@ -100,6 +102,11 @@ find_package(TBB REQUIRED)
 
 add_executable(lab3 ${SOURCES_DIR}/Lab3Main.cpp)
 target_link_libraries(lab3 PRIVATE Kuznechik TBB::tbb easylogging)
+
+find_package(Curses REQUIRED)
+
+add_executable(lab4 ${SOURCES_DIR}/Lab4Main.cpp)
+target_link_libraries(lab4 PRIVATE CRISPMessenger CRISPMessage TCP Streebog Kuznechik Utils TBB::tbb easylogging ${CURSES_LIBRARIES})
 
 # Сборка тестов.
 if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")

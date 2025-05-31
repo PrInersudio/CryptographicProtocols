@@ -25,7 +25,7 @@ void PrintTo(const CRISPMessage &message, std::ostream* os) {
 TEST(CRISPMessageTest, Serialize) {
     static const CRISPMessage message(
         true, 0,
-        CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_NMAC_NMAC,
+        CryptographicSuites::ID::NULL_KuznechikCMAC_256_128_R13235651022_NMAC_NMAC,
         {0, {}, 0}, 0x0b76e6736001,
         {
             0xd3, 0x24, 0x64, 0x3a, 0xef, 0xd9, 0x7b, 0x93,
@@ -63,7 +63,7 @@ TEST(CRISPMessageTest, Serialize) {
 TEST(CRISPMessageTest, Deserialize) {
     static const CRISPMessage expected_message(
         true, 0,
-        CryptographicSuites::NULL_KuznechikCMAC_256_128_R13235651022_NMAC_NMAC,
+        CryptographicSuites::ID::NULL_KuznechikCMAC_256_128_R13235651022_NMAC_NMAC,
         {0, {}, 0}, 0x0b76e6736001,
         {
             0xd3, 0x24, 0x64, 0x3a, 0xef, 0xd9, 0x7b, 0x93,

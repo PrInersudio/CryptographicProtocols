@@ -15,13 +15,15 @@ std::vector<uint8_t> parseHexString(const std::string& hex);
 std::string toHexString(const std::vector<uint8_t> &data) noexcept;
 bool fillBuffer(std::ifstream &file, std::vector<uint8_t> &buffer) noexcept;
 
-inline void confLog(bool stdout_logging = false, bool file_loging = false, const char *logfile = nullptr) noexcept {
+inline void confLog(bool stdout_logging = false, bool file_loging = false, const std::string &logfile = "/dev/null") noexcept {
+    static std::string format = std::to_string(getpid()) + " [%datetime] %level: %msg";
+
     el::Configurations conf;
     conf.setToDefault();
     conf.set(el::Level::Global, el::ConfigurationType::ToFile, file_loging ? "true" : "false");
     conf.set(el::Level::Global, el::ConfigurationType::ToStandardOutput, stdout_logging ? "true" : "false");
-    conf.set(el::Level::Global, el::ConfigurationType::Filename, logfile == nullptr ? "/dev/null" : std::string(logfile));
-    conf.set(el::Level::Global, el::ConfigurationType::Format, "[%datetime] %level: %msg");
+    conf.set(el::Level::Global, el::ConfigurationType::Filename, logfile.empty() ? "/dev/null" : logfile);
+    conf.set(el::Level::Global, el::ConfigurationType::Format, format);
     el::Loggers::reconfigureLogger("default", conf);
 }
 

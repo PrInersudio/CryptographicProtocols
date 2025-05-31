@@ -40,23 +40,29 @@ void getMacParams(
     std::ifstream mac_params_source;
     if (!params.mac_file.empty()) {
         mac_params_source.open(params.mac_file, std::ios::binary);
-        if (!mac_params_source) throw std::runtime_error("Не удалось открыть файл с MAC.");
+        if (!mac_params_source) throw crispex::privilege_error("Не удалось открыть файл с MAC.");
     }
         
     else {
         mac_params_source.open("/dev/urandom", std::ios::binary);
-        if (!mac_params_source) throw std::runtime_error("Нет доступа к /dev/urandom.");
+        if (!mac_params_source) throw crispex::lack_of_entropy("Нет доступа к /dev/urandom.");
     }
     mac_params_source.read(reinterpret_cast<char *>(mac_params.salt.raw()), 32);
-    if (!mac_params_source) throw std::runtime_error("Ошибка получения соли.");
+    if (!mac_params_source) {
+        if (params.mac_file.empty()) throw crispex::lack_of_entropy("Ошибка получения соли.");
+        else throw crispex::file_format_error("Ошибка получения соли.");
+    }
     mac_params_source.read(
         reinterpret_cast<char *>(mac_params.IV),
         OuterMAC::DigestSize
     );
-    if (!mac_params_source) throw std::runtime_error("Ошибка получения инициализирующего вектора.");
+    if (!mac_params_source) {
+        if (params.mac_file.empty()) throw crispex::lack_of_entropy("Ошибка получения инициализирующего вектора.");
+        else throw crispex::file_format_error("Ошибка получения инициализирующего вектора.");
+    }
     if (!params.mac_file.empty()) {
         mac_params_source.read(reinterpret_cast<char *>(expected_mac.raw()),16);
-        if (!mac_params_source) throw std::runtime_error("Ошибка получения ожидаемого MAC.");
+        if (!mac_params_source) throw crispex::file_format_error("Ошибка получения ожидаемого MAC.");
     }
     mac_params_source.close();
     KDF_R_13235651022<InnerMAC, OuterMAC, 32> kdf(key, mac_params.salt);
@@ -217,9 +223,9 @@ void initKuznechikOMACCTXFromKDF(
     }
     if (out_file.is_open()) {
         out_file.write(reinterpret_cast<char *>(mac_params.salt.raw()), 32);
-        if (!out_file) throw std::runtime_error("Не удалось записать соль в выходной файл.");
+        if (!out_file) throw crispex::privilege_error("Не удалось записать соль в выходной файл.");
         out_file.write(reinterpret_cast<char *>(mac_params.IV), OuterMAC::DigestSize);
-        if (!out_file) throw std::runtime_error("Не удалось записать инициализирующий вектор в выходной файл.");
+        if (!out_file) throw crispex::privilege_error("Не удалось записать инициализирующий вектор в выходной файл.");
     }
     ctx.initKeySchedule(mac_params.key);
 }
@@ -230,12 +236,12 @@ int getOrCheckFileMac(const Params &params) {
     std::ofstream out_file;
     if (!params.out_file.empty()) {
         out_file.open(params.out_file, std::ios::binary);
-        if (!out_file) throw std::runtime_error("Не удалось открыть файл для записи результата.");
+        if (!out_file) throw crispex::privilege_error("Не удалось открыть файл для записи результата.");
     }
     SecureBuffer<16> expected_mac;
     initKuznechikOMACCTXFromKDF<OuterMAC>(ctx, params, out_file, expected_mac);
     std::ifstream file(params.text_file, std::ios::binary);
-    if (!file) throw std::runtime_error("Не удалось открыть файл с текстом.");
+    if (!file) throw crispex::privilege_error("Не удалось открыть файл с текстом.");
     std::vector<uint8_t> buf;
     while (fillBuffer(file, buf))
         ctx.update(buf);
@@ -244,7 +250,7 @@ int getOrCheckFileMac(const Params &params) {
     ctx.digest(mac.raw());
     if (out_file.is_open()) {
         out_file.write(reinterpret_cast<char *>(mac.raw()), 16);
-        if (!out_file) throw std::runtime_error("Не удалось записать MAC в выходной файл.");
+        if (!out_file) throw crispex::privilege_error("Не удалось записать MAC в выходной файл.");
         std::cout << "WRITTEN" << std::endl;
         return 0;
     } else if (expected_mac == mac) {
@@ -256,7 +262,7 @@ int getOrCheckFileMac(const Params &params) {
 }
 
 int main(int argc, char **argv) {
-    confLog(true);
+    confLog(false, true, "lab.log");
     Params params;
     if (getParams(params, argc, argv))
         return -1;

@@ -15,10 +15,10 @@ void CTREncrypt(
     uint8_t *data, size_t size,
     const uint8_t (&IV)[BlockSize]
 ) {
+    LOG(INFO) << "Начато шифрование/дешифрование в режиме CTR";
     size_t num_of_blocks = size / BlockSize;
     size_t remainder = size % BlockSize;
     SecureBuffer<BlockSize> state(IV);
-
 #ifndef DONT_USE_TBB
     tbb::parallel_for(tbb::blocked_range<size_t>(0, num_of_blocks, 128),
     [&](const tbb::blocked_range<size_t>& r) {
@@ -48,6 +48,7 @@ void CTREncrypt(
         cipher.encrypt(block);
         std::transform(data, data + remainder, block.begin(), data, std::bit_xor<uint8_t>());
     }
+    LOG(INFO) << "Закончено шифрование/дешифрование в режиме CTR";
 }
 
 template <size_t BlockSize, size_t KeySize>

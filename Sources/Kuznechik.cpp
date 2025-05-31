@@ -157,6 +157,7 @@ static constexpr uint8_t const_keys[32][16] = {
 };
 
 void Kuznechik::initKeySchedule(const SecureBuffer<32> &key) noexcept {
+    LOG(INFO) << "Начата выработка раундовых ключей Кузнечика";
     std::copy(key.begin(), key.begin() + 16, key_schedule_[0].begin());
     std::copy(key.begin() + 16, key.end(), key_schedule_[1].begin());
     for (uint8_t i = 1; i <= 4; ++i) {
@@ -165,10 +166,6 @@ void Kuznechik::initKeySchedule(const SecureBuffer<32> &key) noexcept {
         for (uint8_t j = 0; j < 8; ++j)
             Feistel(key_schedule_[2 * i], key_schedule_[2 * i + 1], const_keys[8 * (i - 1) + j]);
     }
-}
-
-Kuznechik::Kuznechik(const SecureBuffer<32> &key) noexcept {
-    initKeySchedule(key);
 }
 
 SecureBuffer<16> &Kuznechik::encrypt(SecureBuffer<16> &plain_text) const noexcept {

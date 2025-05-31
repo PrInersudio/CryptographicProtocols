@@ -17,36 +17,42 @@ void checkTimestamp(const uint64_t timestamp_raw) noexcept {
         << std::format("{:%Y-%m-%d %H:%M:%S}", now)
     << std::endl;
     const auto diff = now - timestamp;
-    if (diff > std::chrono::years(1) + std::chrono::months(6))
+    if (diff > std::chrono::years(1) + std::chrono::months(6)) {
         std::cout <<
             "Внимание! "
             "Срок действия ключа подошёл к концу! "
             "Безопасность зашифрованной информации не гарантируется."
-            << std::endl;
-    else if (diff > std::chrono::years(1))
+        << std::endl;
+        LOG(WARNING) << "Пользователь ввёл ключ с истёкшим сроком действия";
+    }
+    else if (diff > std::chrono::years(1)) {
         std::cout <<
             "Внимание! "
             "Срок действия ключа подходит к концу! "
             "Запланируйте его замену в ближайшее время."
-            << std::endl;
-    else
+        << std::endl;
+        LOG(WARNING) << "Пользователь ввёл ключ с истекающим сроком действия";
+    }
+    else {
         std::cout <<
             "Проверка срока действия ключа прошла успешно. "
             "Дополнительных действий не требуется."
-            << std::endl;
+        << std::endl;
+        LOG(INFO) << "Ключ пользователя в оптимальном состоянии";
+    }
 }
 
 void getAndCheckKey(const char *filename, MasterKeySecureBuffer<32> &key) {
     uint64_t timestamp;
     std::ifstream file(filename, std::ios::binary);
-    if (!file) throw std::runtime_error("Не удалось открыть файл ключа.");
+    if (!file) throw crispex::privilege_error("Не удалось открыть файл ключа.");
     file.read(reinterpret_cast<char *>(&timestamp), 8);
-    if (!file) throw std::runtime_error("Ошибка чтения временной метки из файла ключа.");
+    if (!file) throw crispex::file_format_error("Ошибка чтения временной метки из файла ключа.");
     #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     timestamp = __builtin_bswap64(timestamp);
     #endif
     file.read(reinterpret_cast<char *>(key.raw()), 32);
-    if (!file) throw std::runtime_error("Ошибка чтения ключа из файла.");
+    if (!file) throw crispex::file_format_error("Ошибка чтения ключа из файла.");
     LOG(INFO) << "Введена ключевая информация";
     checkTimestamp(timestamp);
 }
@@ -59,7 +65,7 @@ void initKuznechikOMACCTX(OMAC<Kuznechik> &ctx, const char *filename) {
 
 std::vector<uint8_t> parseHexString(const std::string& hex) {
     if (hex.length() % 2 != 0)
-        throw std::invalid_argument("Hex-строка должна иметь чётную длину.");
+        throw crispex::invalid_argument("Hex-строка должна иметь чётную длину.");
     std::vector<uint8_t> result;
     result.reserve(hex.length() / 2);
     for (size_t i = 0; i < hex.length(); i += 2) {

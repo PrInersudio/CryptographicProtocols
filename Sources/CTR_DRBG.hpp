@@ -60,6 +60,7 @@ public:
         const uint8_t *additional_input = nullptr,
         const size_t additional_input_len = 0
     ) {
+        LOG(INFO) << "Инициализация/пересеевание ПДСЧ";
         SecureBuffer<SeedLen> seed; seed.zero();
         if (additional_input) {
             size_t to_copy = std::min(SeedLen, additional_input_len);
@@ -69,7 +70,7 @@ public:
         update(seed);
         reseed_counter_ = 1;
     }
-    int operator()(
+    void operator()(
         uint8_t *buffer, size_t size,
         const uint8_t *additional_input = nullptr,
         const size_t additional_input_len = 0
@@ -79,12 +80,7 @@ public:
         const size_t additional_input_len = 0
     ) {
         uint64_t result;
-        if constexpr (AutoReseed)
-            (*this)(reinterpret_cast<uint8_t *>(&result), 8, additional_input, additional_input_len);
-        else {
-            if ((*this)(reinterpret_cast<uint8_t *>(&result), 8, additional_input, additional_input_len))
-                throw std::runtime_error("Необходимо пересеевание для генерации случайного числа.");
-        }
+        (*this)(reinterpret_cast<uint8_t *>(&result), 8, additional_input, additional_input_len);
         return result;
     }
 };
@@ -123,15 +119,17 @@ void CTR_DRBG<CipherType, AutoReseed, EntropySourceType>::update(const SecureBuf
 }
 
 template <IsCipher CipherType, bool AutoReseed, IsEntropySource<CipherType::BlockSize + CipherType::KeySize> EntropySourceType>
-int CTR_DRBG<CipherType, AutoReseed, EntropySourceType>::operator()(
+void CTR_DRBG<CipherType, AutoReseed, EntropySourceType>::operator()(
     uint8_t *buffer, const size_t size,
     const uint8_t *additional_input,
     const size_t additional_input_len
 ) {
     if (size > MaxBytesPerRequest)
-        throw std::invalid_argument("Запрошенный размер привышает максимум.");
+        throw crispex::rbg_query_limit("Запрошенный размер привышает максимум.");
     if (reseed_counter_ > ReseedInterval)
-        { if constexpr (AutoReseed) reseed(); else return -1; }
+        { if constexpr (AutoReseed) reseed(); else throw crispex::rbg_reseed_await("Необходимо пересеевание для генерации случайных байт."); }
+    LOG(INFO) << "Начат запрос к ПДСЧ " << reseed_counter_
+              << " из " << ReseedInterval << " Запрошено " << size << " байт";
     SecureBuffer<SeedLen> seed; seed.zero();
     if (additional_input) {
         size_t to_copy = std::min(SeedLen, additional_input_len);
@@ -168,8 +166,9 @@ int CTR_DRBG<CipherType, AutoReseed, EntropySourceType>::operator()(
         memcpy(buffer + (size - remainder), block.raw(), remainder);
     }
     update(seed);
+    LOG(INFO) << "Закончен запрос к ПДСЧ " << reseed_counter_
+              << " из " << ReseedInterval << " Выработано " << size << " байт";
     ++reseed_counter_;
-    return 0;
 }
 
 #endif

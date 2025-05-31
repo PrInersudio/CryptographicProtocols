@@ -4,6 +4,7 @@
 #include <vector>
 #include "Cipher.hpp"
 #include "Hash.hpp"
+#include "CRISPExceptions.hpp"
 
 template <IsCipher CipherType>
 class OMAC : public MAC<CipherType::BlockSize, CipherType::BlockSize, CipherType::KeySize> {
@@ -102,7 +103,7 @@ void OMAC<CipherType>::finalize() noexcept {
 template <IsCipher CipherType>
 std::vector<uint8_t> OMAC<CipherType>::digest(const size_t size) {
     if (size > CipherType::BlockSize)
-        throw std::invalid_argument("Запрошен размер MAC больше длины блока выбранного шифра.");
+        throw crispex::invalid_argument("Запрошен размер MAC больше длины блока выбранного шифра.");
     finalize();
     return std::vector<uint8_t>(accumulator_.begin(), accumulator_.begin() + size);
 }

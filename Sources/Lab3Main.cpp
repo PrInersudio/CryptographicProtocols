@@ -37,7 +37,7 @@ size_t parseNum(const std::string &str) {
     size_t num_end = 0;
     while (num_end < str.size() && (std::isdigit(str[num_end]) || str[num_end] == '.'))
         ++num_end;
-    if (num_end == 0) throw std::invalid_argument("Нет числа в параметре.");
+    if (num_end == 0) throw crispex::invalid_argument("Нет числа в параметре.");
     double number = std::stod(str.substr(0, num_end));
     std::string unit = str.substr(num_end);
     for (char &c : unit) c = static_cast<char>(std::toupper(c));
@@ -45,7 +45,7 @@ size_t parseNum(const std::string &str) {
     else if (unit == "K") return static_cast<size_t>(number * 1024);
     else if (unit == "M") return static_cast<size_t>(number * 1024 * 1024);
     else if (unit == "G") return static_cast<size_t>(number * 1024 * 1024 * 1024);
-    else throw std::invalid_argument("Неизвестный суффикс единицы измерения");
+    else throw crispex::invalid_argument("Неизвестный суффикс единицы измерения");
 }
 
 static int getParams(Params &params, int argc, char **argv) noexcept {
@@ -59,7 +59,7 @@ static int getParams(Params &params, int argc, char **argv) noexcept {
             case 'n': {
                 try {
                     params.num = parseNum(optarg);
-                } catch (const std::invalid_argument &e) {
+                } catch (const crispex::invalid_argument &e) {
                     std::cerr
                         << "Ошибка. Некорректный аргумент количества генерируемых байт (-n): "
                         << e.what() << std::endl;
@@ -108,12 +108,12 @@ void printProgress(size_t current, size_t total) {
 }
 
 int main(int argc, char **argv) {
-    confLog(true);
+    confLog(false, true, "lab.log");
     Params params;
     if (getParams(params, argc, argv)) return -1;
     try {
         std::ofstream out_file(params.out_file, std::ios::binary);
-        if (!out_file) throw std::runtime_error("Не удалось открыть выходной файл.");
+        if (!out_file) throw crispex::privilege_error("Не удалось открыть выходной файл.");
         CTR_DRBG<Kuznechik, true> rng;
 
         uint8_t buffer[BUFFER_SIZE];
@@ -123,14 +123,14 @@ int main(int argc, char **argv) {
         for (size_t i = 0; i < num_of_blocks; ++i) {
             rng(buffer, BUFFER_SIZE);
             out_file.write(reinterpret_cast<char *>(buffer), BUFFER_SIZE);
-            if (!out_file) throw std::runtime_error("Запись прервана после записи " + std::to_string(i * BUFFER_SIZE) + " байт.");
+            if (!out_file) throw crispex::privilege_error("Запись прервана после записи " + std::to_string(i * BUFFER_SIZE) + " байт.");
             printProgress((i + 1) * BUFFER_SIZE, params.num);
         }
         if (remainder > 0) {
             rng(buffer, remainder);
             out_file.write(reinterpret_cast<char *>(buffer), static_cast<std::streamsize>(remainder));
             if (!out_file)
-                throw std::runtime_error("Запись прервана после записи "  + std::to_string(num_of_blocks * BUFFER_SIZE) + " байт.");
+                throw crispex::privilege_error("Запись прервана после записи "  + std::to_string(num_of_blocks * BUFFER_SIZE) + " байт.");
             printProgress(params.num, params.num);
         }
         std::cout << std::endl;

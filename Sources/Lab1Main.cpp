@@ -6,7 +6,7 @@
 INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char **argv) {
-    confLog(true);
+    confLog(false, true, "lab.log");
     if (argc < 3) {
         std::cout << "Запускать: " << argv[0] << " <файл_ключа> <файл_с_текстом> [ожидаемый MAC в hex]" << std::endl;
         return -1;
@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
         OMAC<Kuznechik> ctx;
         initKuznechikOMACCTX(ctx, argv[1]);
         std::ifstream file(argv[2], std::ios::binary);
-        if (!file) throw std::runtime_error("Не удалось открыть файл с текстом.");
+        if (!file) throw crispex::privilege_error("Не удалось открыть файл с текстом.");
         std::vector<uint8_t> buf;
         while (fillBuffer(file, buf))
             ctx.update(buf);

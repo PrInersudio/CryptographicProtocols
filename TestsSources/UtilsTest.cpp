@@ -74,26 +74,26 @@ TEST(InitKuznechikCTXTest, FileReadSuccess) {
 
 TEST(InitKuznechikCTXTest, FileReadFailure) {
     OMAC<Kuznechik> ctx;
-    EXPECT_THROW(initKuznechikOMACCTX(ctx, "non_existent_file.bin"), std::runtime_error);
+    EXPECT_THROW(initKuznechikOMACCTX(ctx, "non_existent_file.bin"), crispex::privilege_error);
 }
 
-TEST(InitKuznechikCTXTest, FileHasNotEnouthForTimestamp) {
+TEST(InitKuznechikCTXTest, FileHasNotEnoughForTimestamp) {
     std::ofstream file("test_key.bin", std::ios::binary);
     static constexpr char test_fill[] = {0x0, 0x1, 0x2, 0x3};
     file.write(test_fill, 4);
     file.close();
     OMAC<Kuznechik> ctx;
-    EXPECT_THROW(initKuznechikOMACCTX(ctx, "test_key.bin"), std::runtime_error);
+    EXPECT_THROW(initKuznechikOMACCTX(ctx, "test_key.bin"), crispex::file_format_error);
     remove("test_key.bin");
 }
 
-TEST(InitKuznechikCTXTest, FileHasNotEnouthForKey) {
+TEST(InitKuznechikCTXTest, FileHasNotEnoughForKey) {
     std::ofstream file("test_key.bin", std::ios::binary);
     static constexpr char test_fill[] = {0x0, 0x1, 0x2, 0x3, 0x0, 0x1, 0x2, 0x3, 0x0, 0x1, 0x2, 0x3};
     file.write(test_fill, 4);
     file.close();
     OMAC<Kuznechik> ctx;
-    EXPECT_THROW(initKuznechikOMACCTX(ctx, "test_key.bin"), std::runtime_error);
+    EXPECT_THROW(initKuznechikOMACCTX(ctx, "test_key.bin"),  crispex::file_format_error);
     remove("test_key.bin");
 }
 
@@ -108,7 +108,7 @@ TEST(ParseHexStringTest, ValidHexLowercase) {
 }
 
 TEST(ParseHexStringTest, InvalidLength) {
-    EXPECT_THROW(parseHexString("ABC"), std::invalid_argument);
+    EXPECT_THROW(parseHexString("ABC"), crispex::invalid_argument);
 }
 
 TEST(ParseHexStringTest, InvalidCharacters) {

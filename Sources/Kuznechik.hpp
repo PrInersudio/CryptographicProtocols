@@ -12,9 +12,11 @@ public:
 
     Kuznechik() noexcept = default;
     void initKeySchedule(const SecureBuffer<32> &key) noexcept override;
-    Kuznechik(const SecureBuffer<32> &key) noexcept;
+    inline Kuznechik(const SecureBuffer<32> &key) noexcept
+        { initKeySchedule(key); }
     SecureBuffer<16> &encrypt(SecureBuffer<16> &plain_text) const noexcept override;
     SecureBuffer<16> &decrypt(SecureBuffer<16> &encrypted_text) const noexcept override;
+    inline ~Kuznechik() { LOG(INFO) << "Раундовые ключи Кузнечика очищены из памяти"; }
     #ifdef UNIT_TESTS
         const SecureBuffer<16> *getKeySchedule() const noexcept;
     #endif

@@ -4,8 +4,8 @@ using diff_type = std::vector<uint8_t>::difference_type;
 
 CRISPMessage::CRISPMessage(const std::vector<uint8_t> &message) {
     external_key_id_flag_ = message[0] & 0x80 ? true : false;
-    verison_ = (static_cast<uint16_t>(0x7F & message[0]) << 8) | message[1];
-    cryptographic_suite_ = static_cast<CryptographicSuites>(message[2]);
+    version_ = (static_cast<uint16_t>(0x7F & message[0]) << 8) | message[1];
+    cryptographic_suite_ = static_cast<CryptographicSuites::ID>(message[2]);
     if (!(message[3] & 0x80)) {
         key_id_.size = 1;
         key_id_.small_value = message[3];
@@ -31,8 +31,8 @@ CRISPMessage::CRISPMessage(const std::vector<uint8_t> &message) {
 
 std::vector<uint8_t> CRISPMessage::serialize() const noexcept {
     std::vector<uint8_t> message(precalcSize(payload_.size(), key_id_.size, cryptographic_suite_));
-    message[0] = static_cast<uint8_t>(verison_ >> 8);
-    message[1] = static_cast<uint8_t>(verison_ & 0xFF);
+    message[0] = static_cast<uint8_t>(version_ >> 8);
+    message[1] = static_cast<uint8_t>(version_ & 0xFF);
     if (external_key_id_flag_) message[0] |= 0x80;
     message[2] = static_cast<uint8_t>(cryptographic_suite_);
     if (key_id_.size == 1)
@@ -54,9 +54,9 @@ std::vector<uint8_t> CRISPMessage::serialize() const noexcept {
 
 size_t CRISPMessage::precalcSizeWithoutPayload(
     const size_t key_id_size,
-    const CryptographicSuites cryptographic_suite
+    const CryptographicSuites::ID cryptographic_suite
 ) noexcept {
-    return 2 // ExternalKeyldFlag + Version
+    return 2 // ExternalKeyIDFlag + Version
         + 1 // CS
         + 1 // KeyID info byte
         + (key_id_size == 1 ? 0 : key_id_size) // KeyID other bytes

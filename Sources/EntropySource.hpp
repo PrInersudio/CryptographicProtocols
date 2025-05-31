@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include "SecureBuffer.hpp"
+#include "CRISPExceptions.hpp"
 
 template <size_t SeedLen>
 class EntropySource {
@@ -16,13 +17,11 @@ class Urandom : public EntropySource<SeedLen> {
 public:
     SecureBuffer<SeedLen> operator()() const override {
         std::ifstream urandom("/dev/urandom", std::ios::binary);
-        if (!urandom)
-            throw std::runtime_error("Не удалось получить доступ к /dev/urandom.");
+        if (!urandom) throw crispex::lack_of_entropy("Не удалось получить доступ к /dev/urandom.");
         SecureBuffer<SeedLen> entropy;
         urandom.read(reinterpret_cast<char *>(entropy.raw()), SeedLen);
-        if (!urandom)
-            throw std::runtime_error("Не удалось получить энтропию из /dev/urandom.");
-        LOG(INFO) << "Обращение к urandom.";
+        if (!urandom) throw crispex::lack_of_entropy("Не удалось получить энтропию из /dev/urandom.");
+        LOG(INFO) << "Обращение к urandom";
         return entropy;
     }
 };

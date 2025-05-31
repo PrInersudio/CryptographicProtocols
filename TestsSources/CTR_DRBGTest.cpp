@@ -2443,7 +2443,7 @@ TEST(CTRDRBGTest, UINT64Reseed) {
 
 TEST(CTRDRBGTest, MaxBytesPerRequestExceed) {
     CTR_DRBG<OpenSSLAES256> rng;
-    EXPECT_THROW(rng(nullptr, 1 << 20), std::invalid_argument);
+    EXPECT_THROW(rng(nullptr, 1 << 20), crispex::rbg_query_limit);
 }
 
 int main(int argc, char **argv) {

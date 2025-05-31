@@ -6,14 +6,20 @@
 #include <string>
 #include <unistd.h>
 #include <easylogging++.h>
+#include <sys/socket.h>
 
 class TCP {
 protected:
     static constexpr size_t MAX_RECV_SIZE = 10 * 1024 * 1024; // максимум 10 МБ
     static constexpr size_t RECV_BUF_SIZE = 2048;
+
+    mutable std::mutex read_mutex_;
+    mutable std::mutex write_mutex_;
 public:
     virtual std::vector<uint8_t> operator()(const size_t size) const = 0;
     virtual void operator()(const std::vector<uint8_t> &data) const = 0;
+    virtual void close() = 0;
+    virtual ~TCP() = default;
 };
 
 class TCPServer : public TCP {
@@ -23,7 +29,9 @@ private:
 public:
     TCPServer(const uint16_t port);
     void accept(const std::string &client_ip);
-    inline ~TCPServer() noexcept { if (sockfd_ >= 0) { close(sockfd_); LOG(INFO) << "Сервер закрыт"; } if (connfd_ >= 0) close(connfd_); }
+    inline void close() noexcept override
+        { if (sockfd_ >= 0) { shutdown(sockfd_, SHUT_RDWR); ::close(sockfd_); sockfd_ = -1; } if (connfd_ >= 0) { shutdown(connfd_, SHUT_RDWR); ::close(connfd_); connfd_ = -1; } LOG(INFO) << "Сервер закрыт";  }
+    inline ~TCPServer() noexcept { close(); }
     std::vector<uint8_t> operator()(const size_t size) const override;
     void operator()(const std::vector<uint8_t> &data) const override;
 
@@ -40,7 +48,8 @@ private:
 public:
     TCPClient();
     void connect(const std::string &server_ip, const uint16_t server_port) const;
-    inline ~TCPClient() noexcept { if (sockfd_ >= 0) { close(sockfd_); LOG(INFO) << "Клиент закрыт"; } }
+    inline void close() noexcept override { if (sockfd_ >= 0) { shutdown(sockfd_, SHUT_RDWR); ::close(sockfd_); sockfd_ = -1; } LOG(INFO) << "Клиент закрыт"; }
+    inline ~TCPClient() noexcept { close(); }
     void operator()(const std::vector<uint8_t> &data) const override;
     std::vector<uint8_t> operator()(const size_t size) const override;
 

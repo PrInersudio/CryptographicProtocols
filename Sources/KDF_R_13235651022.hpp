@@ -12,6 +12,7 @@ private:
     OuterMAC outer_mac_;
 public:
     KDF_R_13235651022() = default;
+    inline ~KDF_R_13235651022() { LOG(INFO) << "Промежуточный ключ KDF очищен из памяти"; }
     void init(
         const SecureBuffer<MasterKeySize> &master_key,
         const SecureBuffer<InnerMAC::KeySize> &salt
@@ -44,6 +45,7 @@ void KDF_R_13235651022<InnerMAC, OuterMAC, MasterKeySize>::init(
         mac.digest(big_inner_key.raw());
         std::copy(big_inner_key.begin(), big_inner_key.begin() + OuterMAC::KeySize, inner_key.begin());
     }
+    LOG(INFO) << "Выработан промежуточный ключ KDF";
     outer_mac_.initKeySchedule(inner_key);
 }
 
@@ -93,6 +95,7 @@ void KDF_R_13235651022<InnerMAC, OuterMAC, MasterKeySize>::fetch(
     const uint8_t (&user_info)[16],
     const uint8_t (&additional_info)[16]
 ) noexcept {
+    LOG(INFO) << "Запрошена выработка информации размером " << size << " байт";
     SecureBuffer<OuterMAC::DigestSize + 81> format =
         getFormat(IV, application_info, user_info, additional_info, size);
     SecureBuffer<OuterMAC::DigestSize> current_state;
@@ -110,6 +113,7 @@ void KDF_R_13235651022<InnerMAC, OuterMAC, MasterKeySize>::fetch(
         outer_mac_.digest(current_state.raw());
         memcpy(key + (size - remainder), current_state.raw(), remainder);
     }
+    LOG(INFO) << "Выработана производная ключевая информация размером " << size << " байт";
     outer_mac_.clear();
 }
 

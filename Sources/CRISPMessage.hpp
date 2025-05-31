@@ -15,14 +15,14 @@ public:
     inline CRISPMessage(
         const bool external_key_id_flag,
         const uint16_t verison,
-        const CryptographicSuites cryptographic_suite,
+        const CryptographicSuites::ID cryptographic_suite,
         const KeyID key_id,
         const uint64_t seq_num,
         const std::vector<uint8_t> payload,
         const std::vector<uint8_t> ICV
     ) noexcept :
         external_key_id_flag_(external_key_id_flag),
-        verison_(verison),
+        version_(verison),
         cryptographic_suite_(cryptographic_suite),
         key_id_(key_id),
         seq_num_(seq_num),
@@ -33,8 +33,8 @@ public:
     inline bool externalKeyIDFlag() const noexcept
         { return external_key_id_flag_; }
     inline uint16_t version() const noexcept
-        { return verison_; }
-    inline CryptographicSuites cryptographicSuite() const noexcept
+        { return version_; }
+    inline CryptographicSuites::ID cryptographicSuite() const noexcept
         { return cryptographic_suite_; }
     inline const KeyID &keyID() const noexcept
         { return key_id_; }
@@ -49,18 +49,18 @@ public:
 
     static size_t precalcSizeWithoutPayload(
         const size_t key_id_size,
-        const CryptographicSuites cryptographic_suite
+        const CryptographicSuites::ID cryptographic_suite
     ) noexcept;
     inline static size_t precalcSize(
         const size_t payload_size,
         const size_t key_id_size,
-        const CryptographicSuites cryptographic_suite
+        const CryptographicSuites::ID cryptographic_suite
     ) noexcept { return precalcSizeWithoutPayload(key_id_size, cryptographic_suite) + payload_size; }
     static constexpr size_t MaxSize = 2048;
 private:
     bool external_key_id_flag_;
-    uint16_t verison_;
-    CryptographicSuites cryptographic_suite_;
+    uint16_t version_;
+    CryptographicSuites::ID cryptographic_suite_;
     KeyID key_id_;
     uint64_t seq_num_;
     std::vector<uint8_t> payload_;

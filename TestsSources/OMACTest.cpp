@@ -204,7 +204,7 @@ TEST(OMACTest, TestZeroUpdate) {
 
 TEST(OMACTest, TestDigestThrow) {
     OMAC<Kuznechik> ctx(key);
-    EXPECT_THROW(ctx.digest(17), std::invalid_argument);
+    EXPECT_THROW(ctx.digest(17), crispex::invalid_argument);
 }
 
 TEST(OMACTest, TestClear) {
