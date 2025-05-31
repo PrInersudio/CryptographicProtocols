@@ -94,6 +94,70 @@ CRISPMessenger::CRISPMessenger(
     LOG(INFO) << "Инициализирован CRISPMessenger";
 }
 
+#ifdef UNIT_TESTS
+CRISPMessenger::CRISPMessenger(
+        const uint16_t local_port,
+        const std::string &remote_ip,
+        const uint16_t remote_port,
+        const CryptographicSuites::ID server_cryptographic_suite,
+        const SecureBuffer<32> &key,
+        const uint8_t (&local_user_info)[16],
+        const uint8_t (&remote_user_info)[16]
+) : server_(local_port),
+    server_cryptographic_suite_(server_cryptographic_suite),
+    rng_(rng_personalization_string, sizeof(rng_personalization_string)),
+    client_seq_num_(rng_.uint64()),
+    master_key_(key),
+    directory_("/dev/null"),
+    max_payload_size_(CRISPMessage::MaxSize - CRISPMessage::precalcSizeWithoutPayload(0, server_cryptographic_suite_))
+{
+    memcpy(local_user_info_, local_user_info, 16);
+    memcpy(remote_user_info_, remote_user_info, 16);
+    chooseMessageFormer();
+    std::promise<std::exception_ptr> accept_result;
+    std::future<std::exception_ptr> accept_future = accept_result.get_future();
+    std::thread accept_thread;
+    try {
+        accept_thread = std::thread([&] {
+            try {
+                server_.accept(remote_ip);
+                accept_result.set_value(nullptr);
+            } catch (...) {
+                accept_result.set_value(std::current_exception());
+            }
+        });
+        client_.connect(remote_ip, remote_port);
+        accept_thread.join();
+        std::exception_ptr ex = accept_future.get();
+        if (ex) std::rethrow_exception(ex);
+    } catch (...) {
+        if (accept_thread.joinable()) {
+            accept_thread.join();
+        }
+        throw;
+    }
+    static const std::vector<uint8_t> error{'E', 'R', 'R', 'O', 'R'};
+    static constexpr uint8_t rng_additional_info[] = {
+        'C', 'R', 'I', 'S', 'P', 'M', 'e', 's',
+        's', 'e', 'n', 'g', 'e', 'r', ' ', 'c',
+        'o', 'n', 's', 't', 'r', 'u', 'c', 't',
+        'o', 'r', 't', 'e', 's', 't', ' ', 'm',
+        'e', 's', 's', 'a', 'g', 'e', '.'
+    };
+    std::vector<uint8_t> local_ready(16);
+    rng_(local_ready.data(), local_ready.size(), rng_additional_info, sizeof(rng_additional_info));
+    sendMessage(client_, {incSeqNum(client_seq_num_), local_ready});
+    MessageParts remote_ready = getMessage(server_);
+    sendMessage(server_, {incSeqNum(remote_ready.seq_num), remote_ready.part});
+    MessageParts local_ready_response = getMessage(client_);
+    if (local_ready_response.part == error) throw crispex::recv_error("Второй участник отказался от общения.");
+    else if (local_ready_response.part != local_ready) throw crispex::recv_error(
+        "Некорректное содержание пробного сообщения от второго участника."
+        "Либо нелегальный второй участник. Либо нарушена целостность криптографических примитивов."
+    );
+}
+#endif
+
 std::vector<uint8_t> CRISPMessenger::encryptKuznechikCTR(const uint64_t seq_num, const std::vector<uint8_t> &data, const SecureBuffer<32> &key) noexcept {
     const Kuznechik cipher(key);
     std::vector<uint8_t> payload = data;

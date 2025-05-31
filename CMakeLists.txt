@@ -204,6 +204,9 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "UnitTests")
         add_executable(Lab3Test ${TESTS_SOURCES_DIR}/Lab3Test.cpp)
         target_link_libraries(Lab3Test PRIVATE Kuznechik benchmark::benchmark TBB::tbb easylogging)
 
+        add_executable(Lab4Test ${TESTS_SOURCES_DIR}/Lab4Test.cpp)
+        target_link_libraries(Lab4Test PRIVATE CRISPMessenger CRISPMessage TCP Streebog Utils Kuznechik benchmark::benchmark TBB::tbb easylogging)
+
     endif()
 
 endif()

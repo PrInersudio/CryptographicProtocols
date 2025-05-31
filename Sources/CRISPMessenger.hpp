@@ -144,6 +144,17 @@ public:
     std::string recv();
     void send(std::string msg, bool is_file);
     inline void close() { server_.close(); client_.close(); }
+#ifdef UNIT_TESTS
+    CRISPMessenger(
+        const uint16_t local_port,
+        const std::string &remote_ip,
+        const uint16_t remote_port,
+        const CryptographicSuites::ID server_cryptographic_suite,
+        const SecureBuffer<32> &key,
+        const uint8_t (&local_user_info)[16],
+        const uint8_t (&remote_user_info)[16]
+    );
+#endif
 };
 
 template <IsMAC InnerMAC, IsMAC OuterMAC>

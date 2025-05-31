@@ -209,6 +209,9 @@ struct MasterKeySecureBuffer : public SecureBuffer<N> {
     inline ~MasterKeySecureBuffer() noexcept {
         LOG(INFO) << "Введённая ключевая информация удалена из памяти.";
     }
+    MasterKeySecureBuffer(const SecureBuffer<N>& other) {
+        std::copy(other.begin(), other.end(), this->begin());
+    }
 };
 
 
